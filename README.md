@@ -16,4 +16,3 @@ BibTeX entry:
       year={2019}
     }
 
-
