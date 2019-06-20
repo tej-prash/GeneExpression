@@ -29,7 +29,7 @@ class NumericModel:
             self.optimizer = SGD()
         else:
             raise NotImplementedError('Only SGD optimizer is implemented!')
-        if bs < 1 or type(bs) != 'int':
+        if bs < 1 or not isinstance(bs, int):
             raise ValueError('Improper batch size')
         if train_size < 0 or train_size > 1:
             raise ValueError('Improper train_size argument')
