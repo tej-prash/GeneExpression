@@ -5,15 +5,15 @@ SymNet is a deep learning pipeline with a focus on simplicity. Functionality is 
 on simplicity and getting quick results.
 
 ## Cite our work
-SymNet uses the LipschitzLR policy: https://arxiv.org/abs/1902.07399
+SymNet uses the LipschitzLR learning rate policy: [arXiv:1902.07399](https://arxiv.org/abs/1902.07399)
 
 BibTeX entry:  
 
-```
-@article{yedida2019novel,
-  title={A novel adaptive learning rate scheduler for deep neural networks},
-  author={Yedida, Rahul and Saha, Snehanshu},
-  journal={arXiv preprint arXiv:1902.07399},
-  year={2019}
-}
-```
+    @article{yedida2019novel,
+      title={A novel adaptive learning rate scheduler for deep neural networks},
+      author={Yedida, Rahul and Saha, Snehanshu},
+      journal={arXiv preprint arXiv:1902.07399},
+      year={2019}
+    }
+
+
