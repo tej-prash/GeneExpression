@@ -78,7 +78,7 @@ def load_image_dataset(csv_file_path, images_path, parallel=True):
     return np.array(x), np.array(y)
 
 
-def read_csv_file(path):
+def read_csv_file(path: str):
     """
     Reads a CSV file and returns the values in its two columns. This is meant to be used
     to read file names and their corresponding labels.
@@ -89,7 +89,7 @@ def read_csv_file(path):
     return df[df.columns[0]], df[df.columns[1]]
 
 
-def read_image(path):
+def read_image(path: str):
     """
     Read an image file
     :param path: str. Path to image
@@ -98,7 +98,7 @@ def read_image(path):
     return imageio.imread(path)
 
 
-def compute_median_dimensions(images):
+def compute_median_dimensions(images: np.ndarray):
     """
     Compute the median of each dimension of each image in the array
     :param images: array-like. List of images
@@ -111,7 +111,7 @@ def compute_median_dimensions(images):
     return median_shape.astype(int)
 
 
-def resize_images(images, size=None):
+def resize_images(images: np.ndarray, size=None):
     """
     Resizes all images to a fixed size.
     :param images: array-like. List of images.
