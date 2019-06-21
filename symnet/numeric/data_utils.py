@@ -35,7 +35,7 @@ def read_data(path: str, label_column=None, header=True):
     if label_column is None:
         label_column = df.columns[-1]
 
-    x_cols = df.columns
+    x_cols = list(df.columns)
     x_cols.remove(label_column)
 
     return df[x_cols], df[label_column]
