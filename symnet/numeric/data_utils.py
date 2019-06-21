@@ -29,7 +29,7 @@ def rebalance(frame: pd.DataFrame, col: str):
     """
     max_size = frame[col].value_counts().max()
     lst = [frame]
-    for class_index, group in frame.groupby(col):
+    for _, group in frame.groupby(col):
         lst.append(group.sample(int(max_size - len(group)), replace=True))
     frame_new = pd.concat(lst)
 
