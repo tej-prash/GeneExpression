@@ -76,7 +76,8 @@ class AbstractModel:
         :return: learning rate
         """
 
-        assert self.x_train is not None
+        if self.x_train is None:
+            raise ValueError('x_train is None')
 
         penultimate_activ_func = K.function([self.model.layers[0].input], [self.model.layers[-2].output])
 
@@ -102,10 +103,9 @@ class AbstractModel:
         :return: None
         """
 
-        assert self.x_train is not None
-        assert self.x_test is not None
-        assert self.y_train is not None
-        assert self.y_test is not None
+        if self.x_train is None or self.x_test is None or \
+           self.y_train is None or self.y_test is None:
+            raise ValueError('Data is None')
 
         self.model = self._get_model()
         lr_scheduler = LearningRateScheduler(self._lr_schedule)
