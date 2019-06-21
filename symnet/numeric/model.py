@@ -1,10 +1,7 @@
 from symnet.numeric.data_utils import normalize, read_data
-from sklearn.model_selection import train_test_split
 from keras.models import Model
 from keras.layers import Dense, BatchNormalization, Input, Dropout, Concatenate
-import numpy as np
 from symnet import AbstractModel
-from keras.utils import to_categorical
 
 
 class NumericModel(AbstractModel):

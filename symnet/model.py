@@ -127,8 +127,8 @@ class AbstractModel:
         :return:
         """
 
-        assert self.x_test is not None
-        assert self.y_test is not None
+        if self.x_test is None or self.y_test is None:
+            raise ValueError('Test data is None')
 
         return self.model.evaluate(self.x_test, self.y_test, batch_size=self.bs)
 
