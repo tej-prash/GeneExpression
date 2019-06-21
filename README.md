@@ -33,8 +33,9 @@ You can use the `symnet.py` file to run classification on a tabular dataset like
     python3 symnet.py --task classification --dataset data.csv --data-type numeric --labels Y --num-classes 3 
 
 ## Todo
-- [ ] Implement the SBAF and A-ReLU activations
-- [ ] Add regression support
-- [ ] Add support for image datasets
-- [ ] Add support for text datasets
-- [ ] Add support for image segmentation tasks
+- [ ]  Implement oversampling in numeric datasets
+- [ ]  Implement the SBAF and A-ReLU activations
+- [ ]  Add regression support
+- [ ]  Add support for image datasets
+- [ ]  Add support for text datasets
+- [ ]  Add support for image segmentation tasks
