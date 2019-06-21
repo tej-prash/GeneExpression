@@ -11,21 +11,20 @@ class AbstractModel:
     The base class for all Model classes
     """
 
-    def __init__(self, path: str, n_classes: int = 2,
-                 activation: str = 'relu', task: str = 'classification', bs: int = 64, train_size: float = 0.7,
-                 optimizer: str = 'sgd', epochs: int = 100):
+    def __init__(self, path: str, n_classes: int = 2, activation: str = 'relu', task: str = 'classification',
+                 bs: int = 64, train_size: float = 0.7, optimizer: str = 'sgd', epochs: int = 100,
+                 balance: bool = True):
         """
         Initializes a Model instance.
         :param path: Path to the CSV file
         :param n_classes: Number of classes.
-        :param label_column: The column with the labels
-        :param header: int. Row making the column names
         :param activation: Activation to use
         :param task: Type of task to perform
         :param bs: Batch size
         :param train_size: Training set split size
         :param optimizer: Optimizer for neural network
         :param epochs: Number of epochs
+        :param balance: Boolean. If True, balance the dataset before classification
         """
         if task == 'regression':
             raise NotImplementedError('Regression is not supported yet!')
@@ -52,6 +51,7 @@ class AbstractModel:
         self.train_size = train_size
         self.n_classes = n_classes
         self.epochs = epochs
+        self.balance = balance
 
         self.lr_history = []
         self.model = None
@@ -59,15 +59,7 @@ class AbstractModel:
         self.loss = 'categorical_crossentropy'
         self.metrics = ['accuracy']
 
-    def _get_data(self, path: str, label_column: str = None, header: int = 0):
-        """
-        Fetch and pre-process data
-        :param path: str. Path to CSV
-        :param label_column: str. Label column in the dataset
-        :param header: Boolean. True if CSV contains a header row
-        :return: (X, y)
-        """
-        pass
+        self.x_train = self.x_test = self.y_train = self.y_test = None
 
     def _get_model(self):
         """
@@ -83,6 +75,9 @@ class AbstractModel:
         :param epoch: int. Epoch number
         :return: learning rate
         """
+
+        assert self.x_train is not None
+
         penultimate_activ_func = K.function([self.model.layers[0].input], [self.model.layers[-2].output])
 
         Kz = 0.
@@ -106,6 +101,12 @@ class AbstractModel:
         Fit to data
         :return: None
         """
+
+        assert self.x_train is not None
+        assert self.x_test is not None
+        assert self.y_train is not None
+        assert self.y_test is not None
+
         self.model = self._get_model()
         lr_scheduler = LearningRateScheduler(self._lr_schedule)
         self.model.compile(self.optimizer, loss=self.loss, metrics=self.metrics)
@@ -125,6 +126,10 @@ class AbstractModel:
         Returns model performance on test set
         :return:
         """
+
+        assert self.x_test is not None
+        assert self.y_test is not None
+
         return self.model.evaluate(self.x_test, self.y_test, batch_size=self.bs)
 
     def plot_lr(self):

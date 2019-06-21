@@ -15,23 +15,9 @@ class NumericModel(AbstractModel):
 
     def __init__(self, path: str, label_column: str = None, header: int = 0, *args, **kwargs):
         super().__init__(path, *args, **kwargs)
-        self.x_train, self.x_test, self.y_train, self.y_test = self._get_data(path, label_column, header)
-
-    def _get_data(self, path: str, label_column: str = None, header: int = 0):
-        """
-        Fetch and pre-process data
-        :param path: str. Path to CSV
-        :param label_column: str. Label column in the dataset
-        :param header: Boolean. True if CSV contains a header row
-        :return: (X, y)
-        """
-        x, y = read_data(path, label_column, header)
-        x = np.array(x)
-        y = np.array(y)
-        y = to_categorical(y)
-        x = normalize(x)
-        x_train, x_test, y_train, y_test = train_test_split(x, y, train_size=self.train_size)
-        return x_train, x_test, y_train, y_test
+        self.label_column = label_column
+        self.x_train, self.x_test, self.y_train, self.y_test = \
+            read_data(path, label_column, header, balance=self.balance, train_size=self.train_size)
 
     def _get_model(self):
         """
