@@ -29,6 +29,15 @@ You can use the `symnet.py` file to run classification on a tabular dataset. The
 *  `--epochs`: The number of epochs
 *  `--no-balance`: Do not rebalance classes in classification problems
 
+## Docker
+The Dockerfile in `symnet-docker` sets up a minimal Debian Stretch system with Python 3.7 and
+required packages installed. Run it with  
+
+    docker run -it -v [host-src:]/symnet symnet /bin/bash
+
+This starts up an interactive terminal, mounts a volume at `/symnet` in the container,
+and runs a Bash shell. You can change the command run in the
+last argument.
    
 ## Todo
 -  [ ]  Add regression support
