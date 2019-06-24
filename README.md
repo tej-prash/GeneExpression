@@ -4,18 +4,6 @@
 SymNet is a deep learning pipeline with a focus on simplicity. Functionality is available through command-line options or as an API. The focus is
 on simplicity and getting quick results.
 
-## Cite our work
-SymNet uses the LipschitzLR learning rate policy: [arXiv:1902.07399](https://arxiv.org/abs/1902.07399)
-
-BibTeX entry:  
-
-    @article{yedida2019novel,
-      title={A novel adaptive learning rate scheduler for deep neural networks},
-      author={Yedida, Rahul and Saha, Snehanshu},
-      journal={arXiv preprint arXiv:1902.07399},
-      year={2019}
-    }
-
 ## API Usage
 ### Numeric data
 The `symnet.py` file shows how to use the API for multi-class classification
@@ -28,13 +16,44 @@ the `score` method. Currently, only classification is supported, but more featur
 be added soon.
 
 ## CLI Usage
-You can use the `symnet.py` file to run classification on a tabular dataset like this:  
+You can use the `symnet.py` file to run classification on a tabular dataset. The available options are:
+*  `--task`: As of now, only `'classification'` and `'regression'` are supported.
+*  `--dataset`: The CSV dataset.
+*  `--data-type`: As of now, only `'numeric'` is supported.
+*  `--labels`: The CSV column with labels
+*  `--num-classes`: Number of classes (for classification)
+*  `--activation`: The activation to use. Any of `('relu', 'elu', 'selu', 'sigmoid', 'softmax', 'linear', 'sbaf', 'arelu', 'softplus)`
+*  `--no-header`: Indicates that the CSV does not have a header row
+*  `--batch-size`: The batch size to use
+*  `--train-split`: The training data subset split size
+*  `--epochs`: The number of epochs
+*  `--no-balance`: Do not rebalance classes in classification problems
 
-    python3 symnet.py --task classification --dataset data.csv --data-type numeric --labels Y --num-classes 3 
-
+   
 ## Todo
--  [ ]  Implement the SBAF and A-ReLU activations
 -  [ ]  Add regression support
 -  [ ]  Add support for image datasets
 -  [ ]  Add support for text datasets
 -  [ ]  Add support for image segmentation tasks
+
+## Cite our work
+SymNet uses the LipschitzLR learning rate policy: [arXiv:1902.07399](https://arxiv.org/abs/1902.07399)
+
+BibTeX entry:  
+
+    @article{yedida2019novel,
+      title={A novel adaptive learning rate scheduler for deep neural networks},
+      author={Yedida, Rahul and Saha, Snehanshu},
+      journal={arXiv preprint arXiv:1902.07399},
+      year={2019}
+    }
+
+SymNet also implements the SBAF and A-ReLU activation functions: [arXiv:1906.01975](https://arxiv.org/abs/1906.01975). 
+If you use these, please cite:  
+
+    @article{saha2019evolution,
+      title={Evolution of Novel Activation Functions in Neural Network Training with Applications to Classification of Exoplanets},
+      author={Saha, Snehanshu and Nagaraj, Nithin and Mathur, Archana and Yedida, Rahul},
+      journal={arXiv preprint arXiv:1906.01975},
+      year={2019}
+    }

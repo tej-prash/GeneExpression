@@ -1,7 +1,7 @@
-from symnet.numeric.data_utils import normalize, read_data
+from symnet.numeric.data_utils import read_data
 from keras.models import Model
 from keras.layers import Dense, BatchNormalization, Input, Dropout, Concatenate
-from symnet import AbstractModel
+from symnet import AbstractModel, CustomActivation
 
 
 class NumericModel(AbstractModel):
@@ -24,18 +24,21 @@ class NumericModel(AbstractModel):
         inp = Input(shape=(self.x_train.shape[1],))
 
         bn1 = BatchNormalization(name='first_bn')(inp)
-        relu = Dense(5, activation=self.activation, name='dense1')(bn1)
-        drop1 = Dropout(0.2, name='dropout1')(relu)
+        dense = Dense(5, name='dense1')(bn1)
+        act = CustomActivation(self.activation)(dense)
+        drop1 = Dropout(0.2, name='dropout1')(act)
 
         bn = BatchNormalization(name='bn1')(drop1)
-        relu = Dense(5, activation=self.activation, name='dense2')(bn)
-        drop2 = Dropout(0.2)(relu)
+        dense = Dense(5, name='dense2')(bn)
+        act = CustomActivation(self.activation)(dense)
+        drop2 = Dropout(0.2)(act)
 
         interm = Concatenate()([drop1, drop2])
 
         bn = BatchNormalization(name='bn2')(interm)
-        relu = Dense(5, activation=self.activation, name='dense3')(bn)
-        drop = Dropout(0.2)(relu)
+        dense = Dense(5, name='dense3')(bn)
+        act = CustomActivation(self.activation)(dense)
+        drop = Dropout(0.2)(act)
 
         interm = Concatenate()([drop, drop2])
 

@@ -11,7 +11,7 @@ class AbstractModel:
     The base class for all Model classes
     """
 
-    def __init__(self, path: str, n_classes: int = 2, activation: str = 'relu', task: str = 'classification',
+    def __init__(self, path: str, n_classes: int = 2, activation='relu', task: str = 'classification',
                  bs: int = 64, train_size: float = 0.7, optimizer: str = 'sgd', epochs: int = 100,
                  balance: bool = True):
         """
@@ -26,10 +26,7 @@ class AbstractModel:
         :param epochs: Number of epochs
         :param balance: Boolean. If True, balance the dataset before classification
         """
-        if task == 'regression':
-            raise NotImplementedError('Regression is not supported yet!')
-        if task != 'classification':
-            raise ValueError('Invalid task')
+
         if not os.path.exists(path):
             raise FileNotFoundError('Path does not exist')
         if n_classes < 2:
@@ -75,6 +72,10 @@ class AbstractModel:
         :param epoch: int. Epoch number
         :return: learning rate
         """
+
+        if self.task == 'regression':
+            # TODO: Implement this with LipschitzLR
+            return 0.1
 
         if self.x_train is None:
             raise ValueError('x_train is None')
