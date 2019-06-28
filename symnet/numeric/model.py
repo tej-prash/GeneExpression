@@ -1,4 +1,4 @@
-from symnet.numeric.data_utils import read_data
+from symnet.data_utils import read_data
 from keras.models import Model
 from keras.layers import Dense, BatchNormalization, Input, Dropout, Concatenate
 from symnet import AbstractModel, CustomActivation
@@ -11,7 +11,7 @@ class NumericModel(AbstractModel):
     """
 
     def __init__(self, path: str, label_column: str = None, header: int = 0, *args, **kwargs):
-        super().__init__(path, *args, **kwargs)
+        super(NumericModel, self).__init__(path, *args, **kwargs)
         self.label_column = label_column
         self.x_train, self.x_test, self.y_train, self.y_test = \
             read_data(path, label_column, header, balance=self.balance, train_size=self.train_size)
@@ -49,4 +49,5 @@ class NumericModel(AbstractModel):
         else:
             out = Dense(3, activation=self.activation, name='dense4')(bn)
 
-        return Model(inputs=inp, outputs=out)
+        self.model = Model(inputs=inp, outputs=out)
+        return self.model

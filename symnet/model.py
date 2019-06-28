@@ -1,4 +1,4 @@
-from keras.callbacks import LearningRateScheduler
+from keras.callbacks import LearningRateScheduler, ModelCheckpoint
 from keras.optimizers import SGD
 from keras import backend as K
 import numpy as np
@@ -98,9 +98,16 @@ class AbstractModel:
         self.lr_history.append(lr)
         return lr
 
-    def fit(self):
+    def fit(self, finish_fit: bool = True):
         """
-        Fit to data
+        Fit to data.
+
+        The parameter finish_fit is used in cases where you don't want to actually call
+        model.fit(), but want to do something else instead. For an example, see
+        symnet/image/resnet.py for an example. In most cases, you'll want to leave this
+        True. THIS PARAMETER IS ONLY A HACK, NOT A FEATURE.
+
+        :param finish_fit: bool. Set to True unless you know what you're doing.
         :return: None
         """
 
@@ -110,9 +117,26 @@ class AbstractModel:
 
         self.model = self._get_model()
         lr_scheduler = LearningRateScheduler(self._lr_schedule)
+
+        # Prepare callbacks for model saving and for learning rate adjustment.
+        save_dir = os.path.join(os.getcwd(), 'saved_models')
+        model_name = 'model.{epoch:03d}.h5'
+
+        # Prepare model model saving directory.
+        if not os.path.isdir(save_dir):
+            os.makedirs(save_dir)
+
+        filepath = os.path.join(save_dir, model_name)
+        checkpoint = ModelCheckpoint(filepath=filepath,
+                                     monitor='val_acc',
+                                     verbose=1,
+                                     save_best_only=True)
+
         self.model.compile(self.optimizer, loss=self.loss, metrics=self.metrics)
-        self.model.fit(self.x_train, self.y_train, validation_data=(self.x_test, self.y_test), epochs=self.epochs,
-                       batch_size=self.bs, callbacks=[lr_scheduler])
+
+        if finish_fit:
+            self.model.fit(self.x_train, self.y_train, validation_data=(self.x_test, self.y_test), epochs=self.epochs,
+                           batch_size=self.bs, shuffle=True, callbacks=[lr_scheduler, checkpoint])
 
     def predict(self, x: np.ndarray):
         """

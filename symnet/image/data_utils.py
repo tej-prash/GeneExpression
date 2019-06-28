@@ -125,3 +125,17 @@ def resize_images(images: np.ndarray, size=None):
         size = compute_median_dimensions(images)
 
     return np.array([zoom(input=x, zoom=np.divide(size, x.shape)) for x in images])
+
+
+def normalize_images(x_train, x_test):
+    """
+    Normalizes the dataset by subtracting the mean and dividing by 255.
+    :param x_train: Training set
+    :param x_test: Test set
+    :return: (x_train, x_test): Normalized data
+    """
+    x_train_mean = np.mean(x_train, axis=0)
+    x_train = (x_train - x_train_mean) / 255.
+    x_test = (x_test - x_train_mean) / 255.
+
+    return x_train, x_test

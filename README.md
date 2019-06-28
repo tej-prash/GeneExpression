@@ -12,14 +12,18 @@ on a tabular (CSV) dataset. Start by creating a model:
     model = NumericModel(csv_path, n_classes=3, label_column='target', task='classification')
 
 Then, you can call `fit` and `predict` on the model, or find the loss and accuracy using
-the `score` method. Currently, only classification is supported, but more features will
-be added soon.
+the `score` method.
+
+## Image data
+Image classifiers inherit from `AbstractImageClassificationModel`. Currently,
+only ResNet is implemented. See `symnet.py` for example usage. Like
+all models, you can call `fit`, `predict`, and `score`.
 
 ## CLI Usage
 You can use the `symnet.py` file to run classification on a tabular dataset. The available options are:
-*  `--task`: As of now, only `'classification'` and `'regression'` are supported.
+*  `--task`: One of `'classification'` and `'regression'`
 *  `--dataset`: The CSV dataset.
-*  `--data-type`: As of now, only `'numeric'` is supported.
+*  `--data-type`: As of now, only `'numeric'` and `'image'` are supported.
 *  `--labels`: The CSV column with labels
 *  `--num-classes`: Number of classes (for classification)
 *  `--activation`: The activation to use. Any of `('relu', 'elu', 'selu', 'sigmoid', 'softmax', 'linear', 'sbaf', 'arelu', 'softplus)`
@@ -40,10 +44,12 @@ and runs a Bash shell. You can change the command run in the
 last argument.
    
 ## Todo
--  [ ]  Add regression support
--  [ ]  Add support for image datasets
+-  [ ]  Add regression support in numeric data
+-  [ ]  Add DenseNet architecture
 -  [ ]  Add support for text datasets
 -  [ ]  Add support for image segmentation tasks
+-  [ ]  Implement `read_data` in `symnet.image.data_utils`
+-  [ ]  Test the `ResNet` class
 
 ## Cite our work
 SymNet uses the LipschitzLR learning rate policy: [arXiv:1902.07399](https://arxiv.org/abs/1902.07399)
