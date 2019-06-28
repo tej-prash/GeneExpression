@@ -32,6 +32,7 @@ You can use the `symnet.py` file to run classification on a tabular dataset. The
 *  `--train-split`: The training data subset split size
 *  `--epochs`: The number of epochs
 *  `--no-balance`: Do not rebalance classes in classification problems
+*  `--no-augment`: For image datasets, do not augment the data
 
 ## Docker
 The Dockerfile in `symnet-docker` sets up a minimal Debian Stretch system with Python 3.7 and
