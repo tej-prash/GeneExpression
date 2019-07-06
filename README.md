@@ -45,11 +45,10 @@ and runs a Bash shell. You can change the command run in the
 last argument.
    
 ## Todo
--  [ ]  Add regression support in numeric data
 -  [ ]  Add DenseNet architecture
 -  [ ]  Add support for text datasets
 -  [ ]  Add support for image segmentation tasks
--  [ ]  Implement `read_data` in `symnet.image.data_utils`
+-  [ ]  Implement `fit` correctly for image datasets when `augment=False`
 -  [ ]  Test the `ResNet` class
 
 ## Cite our work
