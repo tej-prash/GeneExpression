@@ -128,8 +128,8 @@ class AbstractImageClassificationModel(AbstractModel):
                                  workers=4,
                                  callbacks=callbacks)
 
-        def score(self):
-            return self.model.evaluate_generator(self.datagen.flow_from_dataframe(self.test_df,
-                                                                                  directory=os.getcwd(),
-                                                                                  target_size=(256, 256), # TODO: Change
-                                                                                  batch_size=self.bs))
+    def score(self):
+        return self.model.evaluate_generator(self.datagen.flow_from_dataframe(self.test_df,
+                                                                              directory=os.getcwd(),
+                                                                              target_size=(256, 256),  # TODO: Change
+                                                                              batch_size=self.bs))
