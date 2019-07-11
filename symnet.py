@@ -41,7 +41,7 @@ def main():
     elif args.data_type == 'image':
         # Default to ResNet110 v2
         model = ResNet(args.dataset, label_column=labels, header=has_header, augment_data=augment, n=12, version=2,
-                       n_classes=num_classes)
+                       n_classes=num_classes, bs=bs, activation=activation)
 
     model.fit()
     loss, accuracy = model.score()

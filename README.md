@@ -48,7 +48,8 @@ last argument.
 -  [ ]  Add DenseNet architecture
 -  [ ]  Add support for text datasets
 -  [ ]  Add support for image segmentation tasks
--  [ ]  Test the `ResNet` class
+-  [ ]  Resize and normalize images
+-  [ ]  For images, use LipschitzLR scheduler
 
 ## Cite our work
 SymNet uses the LipschitzLR learning rate policy: [arXiv:1902.07399](https://arxiv.org/abs/1902.07399)

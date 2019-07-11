@@ -58,11 +58,11 @@ class AbstractImageClassificationModel(AbstractModel):
             # Augment the data and call fit() ourselves.
             self.datagen = ImageDataGenerator(
                 # set input mean to 0 over the dataset
-                featurewise_center=self.normalize,
+                featurewise_center=False,
                 # set each sample mean to 0
                 samplewise_center=False,
                 # divide inputs by std of dataset
-                featurewise_std_normalization=self.normalize,
+                featurewise_std_normalization=False,
                 # divide each input by its std
                 samplewise_std_normalization=False,
                 # apply ZCA whitening
@@ -121,10 +121,8 @@ class AbstractImageClassificationModel(AbstractModel):
                                                      directory=os.getcwd(),
                                                      target_size=(256, 256),  # TODO: Change
                                                      batch_size=self.bs)
-        self.x_train, self.y_train = np.array(list(generator))
         self.model.fit_generator(generator,
-                                 steps_per_epoch=len(generator),
-                                 validation_data=(self.x_test, self.y_test),
+                                 steps_per_epoch=len(generator) // self.bs,
                                  epochs=self.epochs,
                                  verbose=1,
                                  workers=4,
