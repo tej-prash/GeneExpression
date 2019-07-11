@@ -48,7 +48,6 @@ last argument.
 -  [ ]  Add DenseNet architecture
 -  [ ]  Add support for text datasets
 -  [ ]  Add support for image segmentation tasks
--  [ ]  Implement `fit` correctly for image datasets when `augment=False`
 -  [ ]  Test the `ResNet` class
 
 ## Cite our work

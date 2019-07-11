@@ -170,7 +170,7 @@ class ResNet(AbstractImageClassificationModel):
         # Instantiate model.
         return Model(inputs=inputs, outputs=outputs)
 
-    def resnet_v2(self, input_shape, depth, num_classes=10):
+    def resnet_v2(self, input_shape, depth):
         """ResNet Version 2 Model builder [b]
 
         Stacks of (1 x 1)-(3 x 3)-(1 x 1) BN-ReLU-Conv2D or also known as
@@ -260,7 +260,7 @@ class ResNet(AbstractImageClassificationModel):
         x = Activation(self.activation)(x)
         x = AveragePooling2D(pool_size=8)(x)
         y = Flatten()(x)
-        outputs = Dense(num_classes,
+        outputs = Dense(self.n_classes,
                         activation='softmax',
                         kernel_initializer='he_normal')(y)
 
