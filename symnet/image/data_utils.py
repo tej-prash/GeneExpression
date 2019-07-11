@@ -12,6 +12,8 @@ import numpy as np
 import pandas as pd
 import imageio
 from scipy.ndimage import zoom
+from sklearn.model_selection import train_test_split
+from symnet.data_utils import rebalance
 
 
 def _image_to_array(img_path):
@@ -73,20 +75,40 @@ def load_image_dataset(csv_file_path, images_path, parallel=True):
         x: Four dimensional numpy.ndarray. The channel dimension is the last dimension.
         y: a numpy.ndarray of the labels for the images
     """
-    img_file_names, y = read_csv_file(csv_file_path)
-    x = read_images(img_file_names, images_path, parallel)
-    return np.array(x), np.array(y)
+    x_train, y_train, x_test, y_test = read_csv_file(csv_file_path)
+
+    x_train = read_images(x_train, images_path, parallel)
+    x_test = read_images(x_test, images_path, parallel)
+
+    return np.array(x_train), np.array(y_train), np.array(x_test), np.array(y_test)
 
 
-def read_csv_file(path: str):
+def read_csv_file(path: str, balance: bool = True):
     """
     Reads a CSV file and returns the values in its two columns. This is meant to be used
     to read file names and their corresponding labels.
     :param path: str. Path to CSV file
-    :return: (filenames, labels)
+    :param balance: bool. If True, balances the training set
+    :return: (x_train, y_train, x_test, y_test)
     """
-    df = pd.read_csv(path, header=True)
-    return df[df.columns[0]], df[df.columns[1]]
+    if path is None or not os.path.exists(path):
+        print('WARNING: Path does not exist, or is None.')
+        return [[]], []
+
+    # TODO: Use header= argument
+    df = pd.read_csv(path)
+
+    if len(df.columns) == 0:
+        print('WARNING: File has no columns')
+        return [[]], []
+
+    train_df, test_df = train_test_split(df, train_size=0.7)
+
+    if balance:
+        train_df = rebalance(train_df, df.columns[1])
+
+    # Return x_train, y_train, x_test, y_test
+    return train_df[df.columns[0]], train_df[df.columns[1]], test_df[df.columns[0]], test_df[df.columns[1]]
 
 
 def read_image(path: str):

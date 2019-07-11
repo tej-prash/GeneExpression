@@ -8,7 +8,7 @@ from keras.regularizers import l2
 from keras.models import Model
 
 from symnet import CustomActivation
-from symnet.image import AbstractImageClassificationModel
+from symnet.image.model import AbstractImageClassificationModel
 
 
 class ResNet(AbstractImageClassificationModel):

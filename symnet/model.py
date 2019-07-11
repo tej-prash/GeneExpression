@@ -65,20 +65,18 @@ class AbstractModel:
         """
         pass
 
-    def _lr_schedule(self, epoch: int):
+    def _lr_schedule(self, epoch: int, base_lr: int, data=None):
         """
         Get the learning rate for a given epoch. Note that this uses the LipschitzLR policy, so the epoch
         number doesn't actually matter.
         :param epoch: int. Epoch number
         :return: learning rate
         """
+        if data is None:
+            data = self.x_train
 
         if self.task == 'regression':
-            # TODO: Implement this with LipschitzLR
             return 0.1
-
-        if self.x_train is None:
-            raise ValueError('x_train is None')
 
         penultimate_activ_func = K.function([self.model.layers[0].input], [self.model.layers[-2].output])
 
@@ -113,7 +111,9 @@ class AbstractModel:
 
         if self.x_train is None or self.x_test is None or \
            self.y_train is None or self.y_test is None:
-            raise ValueError('Data is None')
+            # Again a hack: these aren't set for image classification.
+            if finish_fit:
+                raise ValueError('Data is None')
 
         self.model = self._get_model()
         lr_scheduler = LearningRateScheduler(self._lr_schedule)

@@ -33,7 +33,8 @@ def rebalance(frame: pd.DataFrame, col: str):
     return frame_new
 
 
-def read_data(path: str, label_column: str = None, header: int = 0, balance: bool = True, train_size: float = 0.7):
+def read_data(path: str, label_column: str = None, header: int = 0, balance: bool = True, train_size: float = 0.7,
+              categorize=True):
     """
     Reads a CSV data file, optionally balance it, and split into train/test sets.
     :param path: str. Path to the CSV file
@@ -41,13 +42,16 @@ def read_data(path: str, label_column: str = None, header: int = 0, balance: boo
     :param header: Boolean. True if CSV file has a header
     :param balance: Boolean. True if data should be rebalanced
     :param train_size: float. Percentage of data to be taken as training set
+    :param categorize: bool. If True, uses to_categorical to generate one-hot encoded outputs.
     :return: (X, y) tuple
     """
     if path is None or not os.path.exists(path):
+        print('WARNING: Path does not exist, or is None.')
         return [[]], []
 
     df = pd.read_csv(path, header=header)
     if len(df.columns) == 0:
+        print('WARNING: File has no columns')
         return [[]], []
 
     if label_column is None:
@@ -63,8 +67,12 @@ def read_data(path: str, label_column: str = None, header: int = 0, balance: boo
     train_df.drop(label_column, axis=1, inplace=True)
     test_df.drop(label_column, axis=1, inplace=True)
 
-    y_train = to_categorical(np.array(y))
-    y_test = to_categorical(np.array(y_test))
+    if categorize:
+        y_train = to_categorical(np.array(y))
+        y_test = to_categorical(np.array(y_test))
+    else:
+        y_train = np.array(y)
+        y_test = np.array(y_test)
 
     x_train = np.array(train_df)
     x_test = np.array(test_df)
