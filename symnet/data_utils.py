@@ -2,19 +2,30 @@
 import pandas as pd
 import os
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler,MinMaxScaler
 from keras.utils import to_categorical
 import numpy as np
 
 
-def normalize(data):
+def normalize_fit(data):
     """
     Normalize the data
     :param data: array-like. The data, excluding the labels
     :return: Normalized data
     """
+    #Feature Scaling using normalisation-Activation: Linear
     scaler = StandardScaler()
-    return scaler.fit_transform(data)
+    scaler.fit(data)
+    return scaler
+
+def normalize(data,scaler):
+    """
+    Normalize the data
+    :param data: array-like. The data, excluding the labels
+    :return: Normalized data
+    """
+    #Feature Scaling using normalisation-Activation: Linear
+    return scaler.transform(data)
 
 
 def rebalance(frame: pd.DataFrame, col: str):
@@ -57,9 +68,15 @@ def read_data(path: str, label_column: str = None, header: int = 0, balance: boo
     if label_column is None:
         label_column = df.columns[-1]
 
-    train_df, test_df = train_test_split(df, train_size=train_size)
+    #Normalizing before splitting
+    #Feature scaling technique-Sum of feature ->1
+    # for i in range(df.shape[1]):
+    #     df.iloc[:,i]=df.iloc[:,i]/sum(df.iloc[:,i])
+
+    train_df, test_df = train_test_split(df, train_size=train_size,random_state=42,shuffle=True)
 
     if balance:
+        print("Balancing dataset")
         train_df = rebalance(train_df, label_column)
 
     y = train_df[label_column]

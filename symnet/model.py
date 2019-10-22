@@ -1,4 +1,4 @@
-from keras.callbacks import LearningRateScheduler, ModelCheckpoint
+from keras.callbacks import LearningRateScheduler, ModelCheckpoint,CSVLogger
 from keras.optimizers import SGD
 from keras import backend as K
 import numpy as np
@@ -32,7 +32,7 @@ class AbstractModel:
         if n_classes < 2:
             raise ValueError('n_classes must be at least 2.')
         if optimizer == 'sgd':
-            self.optimizer = SGD()
+            self.optimizer = SGD(clipnorm=2.0)
         else:
             raise NotImplementedError('Only SGD optimizer is implemented!')
         if bs < 1 or not isinstance(bs, int):
@@ -117,6 +117,7 @@ class AbstractModel:
 
         self.model = self._get_model()
         lr_scheduler = LearningRateScheduler(self._lr_schedule)
+        csv_logger=CSVLogger(filename='./tests/BostonHousing/method_6/training_adaptive.log',append='True')
 
         # Prepare callbacks for model saving and for learning rate adjustment.
         save_dir = os.path.join(os.getcwd(), 'saved_models')
@@ -131,12 +132,12 @@ class AbstractModel:
                                      monitor='val_acc',
                                      verbose=1,
                                      save_best_only=True)
-
+        print("self.optimizer",self.optimizer)
         self.model.compile(self.optimizer, loss=self.loss, metrics=self.metrics)
 
         if finish_fit:
             self.model.fit(self.x_train, self.y_train, validation_data=(self.x_test, self.y_test), epochs=self.epochs,
-                           batch_size=self.bs, shuffle=True, callbacks=[lr_scheduler, checkpoint])
+                           batch_size=self.bs, shuffle=True, callbacks=[lr_scheduler, checkpoint,csv_logger])
 
     def predict(self, x: np.ndarray):
         """

@@ -1,0 +1,55 @@
+Using TensorFlow backend.
+WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow/python/framework/op_def_library.py:263: colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Colocations handled automatically by placer.
+/usr/local/lib/python3.5/dist-packages/pandas/core/frame.py:3940: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+
+See the caveats in the documentation: http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy
+  errors=errors)
+WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow/python/ops/math_ops.py:3066: to_int32 (from tensorflow.python.ops.math_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.cast instead.
+2019-10-03 22:34:10.233757: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2019-10-03 22:34:10.237380: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 1991960000 Hz
+2019-10-03 22:34:10.237753: I tensorflow/compiler/xla/service/service.cc:150] XLA service 0x5509060 executing computations on platform Host. Devices:
+2019-10-03 22:34:10.237770: I tensorflow/compiler/xla/service/service.cc:158]   StreamExecutor device (0): <undefined>, <undefined>
+Train on 2415995 samples, validate on 6130 samples
+Epoch 1/1
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.5/dist-packages/keras/callbacks.py", line 653, in on_epoch_begin
+    lr = self.schedule(epoch, lr)
+TypeError: _lr_schedule() takes 2 positional arguments but 3 were given
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "symnet.py", line 57, in <module>
+    main()
+  File "symnet.py", line 51, in main
+    model.fit()
+  File "/home/tejas/PESU/RC/SymNet_Rahul/symnet/symnet/model.py", line 139, in fit
+    batch_size=self.bs, shuffle=True, callbacks=[lr_scheduler, checkpoint])
+  File "/usr/local/lib/python3.5/dist-packages/keras/engine/training.py", line 1039, in fit
+    validation_steps=validation_steps)
+  File "/usr/local/lib/python3.5/dist-packages/keras/engine/training_arrays.py", line 146, in fit_loop
+    callbacks.on_epoch_begin(epoch)
+  File "/usr/local/lib/python3.5/dist-packages/keras/callbacks.py", line 65, in on_epoch_begin
+    callback.on_epoch_begin(epoch, logs)
+  File "/usr/local/lib/python3.5/dist-packages/keras/callbacks.py", line 655, in on_epoch_begin
+    lr = self.schedule(epoch)
+  File "/home/tejas/PESU/RC/SymNet_Rahul/symnet/symnet/regression/model.py", line 110, in _lr_schedule
+    grads_func=K.function([inputs],[grads])
+  File "/usr/local/lib/python3.5/dist-packages/keras/backend/tensorflow_backend.py", line 2744, in function
+    return Function(inputs, outputs, updates=updates, **kwargs)
+  File "/usr/local/lib/python3.5/dist-packages/keras/backend/tensorflow_backend.py", line 2546, in __init__
+    with tf.control_dependencies(self.outputs):
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/framework/ops.py", line 5028, in control_dependencies
+    return get_default_graph().control_dependencies(control_inputs)
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/framework/ops.py", line 4528, in control_dependencies
+    c = self.as_graph_element(c)
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/framework/ops.py", line 3478, in as_graph_element
+    return self._as_graph_element_locked(obj, allow_tensor, allow_operation)
+  File "/usr/local/lib/python3.5/dist-packages/tensorflow/python/framework/ops.py", line 3567, in _as_graph_element_locked
+    types_str))
+TypeError: Can not convert a list into a Tensor or Operation.

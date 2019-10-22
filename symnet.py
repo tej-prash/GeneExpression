@@ -23,6 +23,8 @@ parser.add_argument('--no-augment', action='store_true', help='Do not augment da
 
 
 def main():
+    #Fix weights
+
     args = parser.parse_args()
 
     num_classes = args.num_classes
@@ -38,7 +40,7 @@ def main():
 
     if task=='regression':
         model=RegressionModel(args.dataset, n_classes=num_classes, label_column=labels, task=task, header=has_header,
-                             activation=activation, bs=bs, train_size=train_split, epochs=n_epochs, balance=balance)
+                             activation=activation, bs=bs, train_size=train_split, epochs=n_epochs, balance=False)
 
     elif args.data_type == 'numeric':
         model = NumericModel(args.dataset, n_classes=num_classes, label_column=labels, task=task, header=has_header,
@@ -51,7 +53,10 @@ def main():
     model.fit()
     loss, accuracy = model.score()
     print('Loss =', loss, '\nAccuracy =', accuracy)
-
+    model.plot_Kz()
+    #Predict model
+    # loss=model.calculate_loss(model.x_test,model.y_test)
+    # print('Loss =', loss)
 
 if __name__ == '__main__':
     main()
