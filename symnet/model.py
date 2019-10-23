@@ -117,7 +117,7 @@ class AbstractModel:
 
         self.model = self._get_model()
         lr_scheduler = LearningRateScheduler(self._lr_schedule)
-        csv_logger=CSVLogger(filename='./tests/BostonHousing/method_6/training_adaptive.log',append='True')
+        csv_logger=CSVLogger(filename='./tests/BostonHousing/method_7/training_0.1.log',append='True')
 
         # Prepare callbacks for model saving and for learning rate adjustment.
         save_dir = os.path.join(os.getcwd(), 'saved_models')

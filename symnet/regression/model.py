@@ -128,7 +128,7 @@ class RegressionModel(AbstractModel):
         if self.task == 'classification':
             out = Dense(3, activation='softmax', name='dense4')(bn)
         else:
-            out = Dense(1, activation='linear', name='dense4')(bn)
+            out = Dense(1, activation='relu', name='dense4')(bn)
 
         self.model = Model(inputs=inp, outputs=out)
 
@@ -147,7 +147,7 @@ class RegressionModel(AbstractModel):
         if self.x_train is None:
             raise ValueError('x_train is None')
 
-        #return 0.1
+        # return 0.1
 
         if(len(self.model.layers)!=2):
             penultimate_activ_func = K.function([self.model.layers[0].input], [self.model.layers[-2].output])
@@ -201,6 +201,7 @@ class RegressionModel(AbstractModel):
                 K_max=L
 
         lr=float(1/K_max)
+        lr=lr/2.0
         print("Kmax",K_max)
         print("Learning Rate new:",lr)
         self.lr_history.append(lr)
@@ -215,7 +216,7 @@ class RegressionModel(AbstractModel):
         Plots Kz
         :return: None
         """
-        with open("./tests/BostonHousing/method_6/K_values","w") as fp:
+        with open("./tests/BostonHousing/method_7/K_values","a") as fp:
             fp.write("K_z\n")
             for i in self.K_z:
                 fp.write(str(i)+"\n")
@@ -223,7 +224,7 @@ class RegressionModel(AbstractModel):
         plt.xlabel("Iteration")
         plt.ylabel("K_z")
         plt.title("K_z over time")
-        plt.savefig("./tests/BostonHousing/method_6/K_values.png")
+        plt.savefig("./tests/BostonHousing/method_7/K_values.png")
     # def calculate_loss(self,x:np.ndarray,y:np.ndarray):
     #     """
     #     Predict on new data
