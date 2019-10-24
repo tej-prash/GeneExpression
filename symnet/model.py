@@ -116,8 +116,9 @@ class AbstractModel:
                 raise ValueError('Data is None')
 
         self.model = self._get_model()
+
         lr_scheduler = LearningRateScheduler(self._lr_schedule)
-        csv_logger=CSVLogger(filename='./tests/BostonHousing/method_7/training_0.1.log',append='True')
+        csv_logger=CSVLogger(filename='./tests/BostonHousing/method_10/training_adaptive.log',append='True')
 
         # Prepare callbacks for model saving and for learning rate adjustment.
         save_dir = os.path.join(os.getcwd(), 'saved_models')
@@ -134,6 +135,7 @@ class AbstractModel:
                                      save_best_only=True)
         print("self.optimizer",self.optimizer)
         self.model.compile(self.optimizer, loss=self.loss, metrics=self.metrics)
+
 
         if finish_fit:
             self.model.fit(self.x_train, self.y_train, validation_data=(self.x_test, self.y_test), epochs=self.epochs,

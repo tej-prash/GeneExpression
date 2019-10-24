@@ -1,9 +1,9 @@
 from symnet.data_utils import read_data,normalize,normalize_fit
-from keras.models import Model
+from keras.models import Model,model_from_json
 from symnet import AbstractModel, CustomActivation
 from keras.callbacks import LearningRateScheduler
 from keras.optimizers import SGD,Adam
-from keras.layers import Dense, Input, Dropout, Concatenate,BatchNormalization
+from keras.layers import Dense, Input, Dropout, Concatenate,BatchNormalization,LeakyReLU
 import os
 from keras import backend as K
 import tensorflow as tf
@@ -100,6 +100,16 @@ class RegressionModel(AbstractModel):
         # return Model(inputs=x,outputs=y)
 
         ## RES-Net like architecture
+
+        #Get saved model
+        # fp=open("./tests/BostonHousing/method_8/model_constant.json","r")
+        # loaded_model=fp.read()
+        # fp.close()
+        # self.model=model_from_json(loaded_model)
+
+
+        # return self.model
+
         inp = Input(shape=(self.x_train.shape[1],))
 
         bn1 = BatchNormalization(name='first_bn')(inp)
@@ -128,11 +138,13 @@ class RegressionModel(AbstractModel):
         if self.task == 'classification':
             out = Dense(3, activation='softmax', name='dense4')(bn)
         else:
-            out = Dense(1, activation='relu', name='dense4')(bn)
+            out = Dense(1,activation='softsign' ,name='dense4')(bn)
 
         self.model = Model(inputs=inp, outputs=out)
 
         plot_model(self.model,to_file="./tests/BostonHousing/model_img.png",show_shapes=True,show_layer_names=True)
+
+        self.model.load_weights('./tests/BostonHousing/method_10/model_constant.h5') 
 
         return self.model
 
@@ -146,6 +158,14 @@ class RegressionModel(AbstractModel):
 
         if self.x_train is None:
             raise ValueError('x_train is None')
+
+        #Verify model weights
+        if(epoch==0):
+            self.model.save_weights("./tests/BostonHousing/method_10/model_adaptive.h5")
+
+
+        # if(epoch==0):
+        #     self.model.save_weights("./tests/BostonHousing/method_10/model_constant.h5")
 
         # return 0.1
 
@@ -201,7 +221,6 @@ class RegressionModel(AbstractModel):
                 K_max=L
 
         lr=float(1/K_max)
-        lr=lr/2.0
         print("Kmax",K_max)
         print("Learning Rate new:",lr)
         self.lr_history.append(lr)
@@ -216,7 +235,7 @@ class RegressionModel(AbstractModel):
         Plots Kz
         :return: None
         """
-        with open("./tests/BostonHousing/method_7/K_values","a") as fp:
+        with open("./tests/BostonHousing/method_10/K_values","a") as fp:
             fp.write("K_z\n")
             for i in self.K_z:
                 fp.write(str(i)+"\n")
@@ -224,7 +243,7 @@ class RegressionModel(AbstractModel):
         plt.xlabel("Iteration")
         plt.ylabel("K_z")
         plt.title("K_z over time")
-        plt.savefig("./tests/BostonHousing/method_7/K_values.png")
+        plt.savefig("./tests/BostonHousing/method_10/K_values.png")
     # def calculate_loss(self,x:np.ndarray,y:np.ndarray):
     #     """
     #     Predict on new data
