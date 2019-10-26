@@ -1,6 +1,7 @@
 from symnet.data_utils import read_data,normalize,normalize_fit
 from keras.models import Model,model_from_json
 from symnet import AbstractModel, CustomActivation
+from symnet.activations import ARelu,SBAF
 from keras.callbacks import LearningRateScheduler
 from keras.optimizers import SGD,Adam
 from keras.layers import Dense, Input, Dropout, Concatenate,BatchNormalization,LeakyReLU
@@ -14,6 +15,8 @@ from keras.losses import mean_absolute_error
 from keras.utils.vis_utils import plot_model
 import seaborn as sns
 import matplotlib.pyplot as plt
+from keras.constraints import NonNeg
+
 
 class RegressionModel(AbstractModel):
     """
@@ -71,7 +74,7 @@ class RegressionModel(AbstractModel):
         self.x_train, self.x_test, self.y_train, self.y_test = \
             read_data(path, label_column, header, balance=self.balance, train_size=self.train_size,categorize=False) 
 
-        self.scaler_x,self.scaler_y=tuple(map(normalize_fit,[self.x_train,self.y_train.reshape(-1,1)]))
+        # self.scaler_x,self.scaler_y=tuple(map(normalize_fit,[self.x_train,self.y_train.reshape(-1,1)]))
 
         #Plot distributions of y_train and y_test
         # sns.distplot(self.y_train,hist=False,label="Training dataset")
@@ -79,10 +82,10 @@ class RegressionModel(AbstractModel):
         # plt.legend()
         # plt.savefig('./tests/method_14/dist_y_train_y_test.png')
 
-        self.x_train,self.y_train=tuple(map(normalize,[self.x_train,self.y_train.reshape(-1,1)],[self.scaler_x,self.scaler_y]))
+        # self.x_train,self.y_train=tuple(map(normalize,[self.x_train,self.y_train.reshape(-1,1)],[self.scaler_x,self.scaler_y]))
         # self.scaler_x,self.scaler_y=tuple(map(normalize_fit,[self.x_test,self.y_test.reshape(-1,1)]))
         
-        self.x_test,self.y_test=tuple(map(normalize,[self.x_test,self.y_test.reshape(-1,1)],[self.scaler_x,self.scaler_y]))
+        # self.x_test,self.y_test=tuple(map(normalize,[self.x_test,self.y_test.reshape(-1,1)],[self.scaler_x,self.scaler_y]))
 
         print(self.x_train.shape)
 
@@ -138,13 +141,14 @@ class RegressionModel(AbstractModel):
         if self.task == 'classification':
             out = Dense(3, activation='softmax', name='dense4')(bn)
         else:
-            out = Dense(1,activation='softsign' ,name='dense4')(bn)
+            out = Dense(1,name='dense4',activation='sigmoid')(bn)
+            out = SBAF(alpha=0.1)(out)
 
         self.model = Model(inputs=inp, outputs=out)
 
         plot_model(self.model,to_file="./tests/BostonHousing/model_img.png",show_shapes=True,show_layer_names=True)
 
-        self.model.load_weights('./tests/BostonHousing/method_10/model_constant.h5') 
+        self.model.load_weights('./tests/BostonHousing/method_13/model_constant.h5') 
 
         return self.model
 
@@ -160,20 +164,21 @@ class RegressionModel(AbstractModel):
             raise ValueError('x_train is None')
 
         #Verify model weights
-        if(epoch==0):
-            self.model.save_weights("./tests/BostonHousing/method_10/model_adaptive.h5")
+        # if(epoch==0):
+        #     self.model.save_weights("./tests/BostonHousing/method_13/model_adaptive.h5")
 
 
         # if(epoch==0):
-        #     self.model.save_weights("./tests/BostonHousing/method_10/model_constant.h5")
+        #     self.model.save_weights("./tests/BostonHousing/method_13/model_constant.h5")
 
         # return 0.1
 
         if(len(self.model.layers)!=2):
-            penultimate_activ_func = K.function([self.model.layers[0].input], [self.model.layers[-2].output])
+            penultimate_activ_func = K.function([self.model.layers[0].input], [self.model.layers[-3].output])
 
-        # activ_func=K.function([self.model.layers[0].input],[self.model.output])
-        
+        activ_func=K.function([self.model.layers[0].input],[self.model.output])
+        z_activ_func=K.function([self.model.layers[0].input],[self.model.layers[-2].output])
+
         #Calculate gradient
         #grads=K.gradients(self.model.total_loss,self.model.trainable_weights)
         #print("grads",grads)
@@ -220,9 +225,17 @@ class RegressionModel(AbstractModel):
             if(L>K_max):
                 K_max=L
 
+        penul_output=z_activ_func([self.x_train[:64]])
+        output=activ_func([self.x_train[:64]])
+        print("Output is",output)
+        print("Label is",self.y_train[:64])
+        print("Z is ",penul_output)
+
         lr=float(1/K_max)
+        lr=lr*4.
         print("Kmax",K_max)
         print("Learning Rate new:",lr)
+
         self.lr_history.append(lr)
         self.K_z.append(K_max)
 
@@ -235,7 +248,7 @@ class RegressionModel(AbstractModel):
         Plots Kz
         :return: None
         """
-        with open("./tests/BostonHousing/method_10/K_values","a") as fp:
+        with open("./tests/BostonHousing/method_13/K_values","a") as fp:
             fp.write("K_z\n")
             for i in self.K_z:
                 fp.write(str(i)+"\n")
@@ -243,7 +256,8 @@ class RegressionModel(AbstractModel):
         plt.xlabel("Iteration")
         plt.ylabel("K_z")
         plt.title("K_z over time")
-        plt.savefig("./tests/BostonHousing/method_10/K_values.png")
+        plt.savefig("./tests/BostonHousing/method_13/K_values.png")
+
     # def calculate_loss(self,x:np.ndarray,y:np.ndarray):
     #     """
     #     Predict on new data

@@ -14,7 +14,7 @@ def normalize_fit(data):
     :return: Normalized data
     """
     #Feature Scaling using normalisation-Activation: Linear
-    scaler = StandardScaler()
+    scaler = MinMaxScaler()
     scaler.fit(data)
     return scaler
 
@@ -69,11 +69,12 @@ def read_data(path: str, label_column: str = None, header: int = 0, balance: boo
         label_column = df.columns[-1]
 
     #Normalizing before splitting
-    #Feature scaling technique-Sum of feature ->1
-    # for i in range(df.shape[1]):
-    #     df.iloc[:,i]=df.iloc[:,i]/sum(df.iloc[:,i])
+    #Feature scaling technique-MinMax Scaler
+    scaler=MinMaxScaler()
+    scaled_values=scaler.fit_transform(df.values)
+    scaled_df=pd.DataFrame(data=scaled_values,columns=df.columns)
 
-    train_df, test_df = train_test_split(df, train_size=train_size,random_state=42,shuffle=True)
+    train_df, test_df = train_test_split(scaled_df, train_size=train_size,random_state=42,shuffle=True)
 
     if balance:
         print("Balancing dataset")
