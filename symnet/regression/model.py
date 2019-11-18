@@ -44,6 +44,15 @@ class RegressionModel(AbstractModel):
             raise ValueError('n_classes must be 1.')
         if optimizer == 'sgd':
             self.optimizer = SGD()
+            self.optimizer_name = 'sgd'
+        elif optimizer == 'Adam':
+            self.optimizer=Adam()
+            self.optimizer_name = 'Adam'
+            self.K_1=[]
+            self.K_2=[]
+            self.beta_1=0.7
+            self.beta_2=0.9
+            self.epsilon=1e-8
         else:
             raise NotImplementedError('Only SGD optimizer is implemented!')
         if bs < 1 or not isinstance(bs, int):
@@ -73,8 +82,13 @@ class RegressionModel(AbstractModel):
 
         self.x_train, self.x_test, self.y_train, self.y_test = \
             read_data(path, label_column, header, balance=self.balance, train_size=self.train_size,categorize=False) 
+        
+        #Feature scaling only on X
+        # self.scaler_x=tuple(map(normalize_fit,[self.x_train]))[0]
+        # self.x_train=tuple(map(normalize,[self.x_train],[self.scaler_x]))[0]
 
-        # self.scaler_x,self.scaler_y=tuple(map(normalize_fit,[self.x_train,self.y_train.reshape(-1,1)]))
+        # self.scaler_x=tuple(map(normalize_fit,[self.x_test]))[0]
+        # self.x_test=tuple(map(normalize,[self.x_test],[self.scaler_x]))[0]
 
         #Plot distributions of y_train and y_test
         # sns.distplot(self.y_train,hist=False,label="Training dataset")
@@ -82,11 +96,11 @@ class RegressionModel(AbstractModel):
         # plt.legend()
         # plt.savefig('./tests/method_14/dist_y_train_y_test.png')
 
-        # self.x_train,self.y_train=tuple(map(normalize,[self.x_train,self.y_train.reshape(-1,1)],[self.scaler_x,self.scaler_y]))
-        # self.scaler_x,self.scaler_y=tuple(map(normalize_fit,[self.x_test,self.y_test.reshape(-1,1)]))
+        #Feature scaling on X and Y
+        self.scaler_x,self.scaler_y=tuple(map(normalize_fit,[self.x_train,self.y_train.reshape(-1,1)]))
+        self.x_train,self.y_train=tuple(map(normalize,[self.x_train,self.y_train.reshape(-1,1)],[self.scaler_x,self.scaler_y]))
+        self.x_test,self.y_test=tuple(map(normalize,[self.x_test,self.y_test.reshape(-1,1)],[self.scaler_x,self.scaler_y]))
         
-        # self.x_test,self.y_test=tuple(map(normalize,[self.x_test,self.y_test.reshape(-1,1)],[self.scaler_x,self.scaler_y]))
-
         print(self.x_train.shape)
 
     def _get_model(self):
@@ -141,14 +155,13 @@ class RegressionModel(AbstractModel):
         if self.task == 'classification':
             out = Dense(3, activation='softmax', name='dense4')(bn)
         else:
-            out = Dense(1,name='dense4',activation='sigmoid')(bn)
-            out = SBAF(alpha=0.1)(out)
+            out = Dense(1,name='dense4',activation='softsign')(bn)
 
         self.model = Model(inputs=inp, outputs=out)
 
-        plot_model(self.model,to_file="./tests/BostonHousing/model_img.png",show_shapes=True,show_layer_names=True)
+        # plot_model(self.model,to_file="./tej_tests/EnergyEfficiency/Y1/model_img.png",show_shapes=True,show_layer_names=True)
 
-        self.model.load_weights('./tests/BostonHousing/method_13/model_constant.h5') 
+        # self.model.load_weights('./tej_tests/BostonHousing/method_10/random_state_42/model_constant.h5') 
 
         return self.model
 
@@ -163,92 +176,165 @@ class RegressionModel(AbstractModel):
         if self.x_train is None:
             raise ValueError('x_train is None')
 
-        #Verify model weights
-        # if(epoch==0):
-        #     self.model.save_weights("./tests/BostonHousing/method_13/model_adaptive.h5")
+        if(self.optimizer_name == 'sgd'):
+            #Verify model weights
+            # if(epoch==0):
+            #     self.model.save_weights("./tej_tests/BostonHousing/method_10/random_state_42/model_adaptive.h5")
 
 
-        # if(epoch==0):
-        #     self.model.save_weights("./tests/BostonHousing/method_13/model_constant.h5")
+            if(epoch==0):
+                self.model.save_weights("./tej_tests/BostonHousing/method_10/random_state_42/model_constant.h5")
 
-        # return 0.1
+            return 0.1
 
-        if(len(self.model.layers)!=2):
-            penultimate_activ_func = K.function([self.model.layers[0].input], [self.model.layers[-3].output])
+            if(len(self.model.layers)!=2):
+                penultimate_activ_func = K.function([self.model.layers[0].input], [self.model.layers[-2].output])
 
-        activ_func=K.function([self.model.layers[0].input],[self.model.output])
-        z_activ_func=K.function([self.model.layers[0].input],[self.model.layers[-2].output])
+            # activ_func=K.function([self.model.layers[0].input],[self.model.output])
+            # z_activ_func=K.function([self.model.layers[0].input],[self.model.layers[-2].output])
 
-        #Calculate gradient
-        #grads=K.gradients(self.model.total_loss,self.model.trainable_weights)
-        #print("grads",grads)
-        #inputs=self.model._feed_inputs + self.model._feed_targets + self.model._feed_sample_weights
-        #print("inputs",inputs)
-        #grads_func=K.function(inputs,grads)
+            #Calculate gradient
+            #grads=K.gradients(self.model.total_loss,self.model.trainable_weights)
+            #print("grads",grads)
+            #inputs=self.model._feed_inputs + self.model._feed_targets + self.model._feed_sample_weights
+            #print("inputs",inputs)
+            #grads_func=K.function(inputs,grads)
 
-        #Maximum Lipschitz constant
-        K_max=-1
-        for i in range(((len(self.x_train) - 1) // self.bs + 1)):
-            start_i=i*self.bs
-            end_i=start_i+self.bs
-            xb=self.x_train[start_i:end_i]
-            y=self.y_train[start_i:end_i]
-            if(len(self.model.layers)>2):  
-                ##Using the theoretical framework
-                # activ=np.linalg.norm(penultimate_activ_func([xb]),axis=0)
-                # Kz=np.max(activ)
+            #Maximum Lipschitz constant
+            K_max=-1
+            for i in range(((len(self.x_train) - 1) // self.bs + 1)):
+                start_i=i*self.bs
+                end_i=start_i+self.bs
+                xb=self.x_train[start_i:end_i]
+                y=self.y_train[start_i:end_i]
+                if(len(self.model.layers)>2):  
+                    ##Using the theoretical framework
+                    # activ=np.linalg.norm(penultimate_activ_func([xb]),axis=0)
+                    # Kz=np.max(activ)
 
-                ##Using the previous code
-                activ=np.linalg.norm(penultimate_activ_func([xb]))
-                Kz=activ
+                    ##Using the previous code
+                    activ=np.linalg.norm(penultimate_activ_func([xb]))
+                    Kz=activ
 
+                else:
+                    ##Using the theoretical framework
+                    # activ=np.linalg.norm((xb),axis=0)
+                    # Kz=np.max(activ)
+
+                    ##Using the previous code
+                    activ=np.linalg.norm([xb])
+                    Kz=activ
+
+
+                # weight_matrices=[]
+                # for layer in self.model.layers:
+                #     weight_matrices.append(layer.get_weights())
+                # weight_matrices=np.array(weight_matrices)
+                # print("hiii")
+                # print(weight_matrices.shape)
+                # evaluated_grads=grads_func([xb,y,weight_matrices])
+                # print(evaluated_grads)    
+                #print("kz is :",Kz)
+                L=Kz/float(self.bs)
+                if(L>K_max):
+                    K_max=L
+
+            # penul_output=z_activ_func([self.x_train[:64]])
+            # output=activ_func([self.x_train[:64]])
+            # print("Output is",output)
+            # print("Label is",self.y_train[:64])
+            # print("Z is ",penul_output)
+
+            lr=float(1/K_max)
+            print("Kmax",K_max)
+            print("Learning Rate new:",lr)
+
+            self.lr_history.append(lr)
+            self.K_z.append(K_max)
+
+            #plt.plot(np.arange(len(gradient_list)),gradient_list)
+            #plt.show()
+            return lr
+            #return lr
+        elif(self.optimizer_name == 'Adam'):
+            # print("----------------------------Adam--------------------------------")
+            # Approximating max||delta(L)^2|| to be (max||delta(L)||)^2
+
+            #Verify model weights
+            if(epoch==0):
+                self.model.save_weights("./tej_tests/CaliforniaHousing/method_19/model_adaptive.h5")
+
+
+            # if(epoch==0):
+            #     self.model.save_weights("./tej_tests/CaliforniaHousing/method_19/model_constant.h5")
+
+            # return 0.001
+
+            if(len(self.model.layers)!=2):
+                penultimate_activ_func = K.function([self.model.layers[0].input], [self.model.layers[-2].output])
+
+            #Maximum Lipschitz constant
+            K_max=-1.0
+            K_1=-1.0
+            K_2=-1.0
+            for i in range(((len(self.x_train) - 1) // self.bs + 1)):
+                start_i=i*self.bs
+                end_i=start_i+self.bs
+                xb=self.x_train[start_i:end_i]
+                y=self.y_train[start_i:end_i]
+                if(len(self.model.layers)>2):  
+                    ##Using the theoretical framework
+                    # activ=np.linalg.norm(penultimate_activ_func([xb]),axis=0)
+                    # Kz=np.max(activ)
+
+                    ##Using the previous code
+                    activ=np.linalg.norm(penultimate_activ_func([xb]))
+                    Kz=activ
+
+                else:
+                    ##Using the theoretical framework
+                    # activ=np.linalg.norm((xb),axis=0)
+                    # Kz=np.max(activ)
+
+                    ##Using the previous code
+                    activ=np.linalg.norm([xb])
+                    Kz=activ
+
+                L=Kz/float(self.bs)
+                if(L>K_max):
+                    K_max=L
+            if(self.K_1==[]):
+                # Use norm of the gradient and square of the norm of the gradient as estimates for the first K1 and K2
+                self.K_1.append(K_max)
+                self.K_2.append(K_max*K_max)
+                K_1=K_max
+                K_2=K_max * K_max
+
+                return 0.001
             else:
-                ##Using the theoretical framework
-                # activ=np.linalg.norm((xb),axis=0)
-                # Kz=np.max(activ)
+                K_1=(self.beta_1*self.K_1[-1])+((1-self.beta_1)*(K_max))
+                K_2=(self.beta_2*self.K_2[-1])+((1-self.beta_2)*(K_max*K_max))
+                self.K_1.append(K_1)
+                self.K_2.append(K_2)
+            
+            K_eff=(float(K_1))/((K_2**(0.5))+self.epsilon)
+            lr=1/K_eff
+            print("Keff",K_eff)
+            print("K1",K_1)
+            print("K2",K_2)
+            print("Learning Rate new:",lr)
 
-                ##Using the previous code
-                activ=np.linalg.norm([xb])
-                Kz=activ
+            self.lr_history.append(lr)
+            self.K_z.append(K_eff)
 
+            return lr
 
-            # weight_matrices=[]
-            # for layer in self.model.layers:
-            #     weight_matrices.append(layer.get_weights())
-            # weight_matrices=np.array(weight_matrices)
-            # print("hiii")
-            # print(weight_matrices.shape)
-            # evaluated_grads=grads_func([xb,y,weight_matrices])
-            # print(evaluated_grads)    
-            #print("kz is :",Kz)
-            L=Kz/float(self.bs)
-            if(L>K_max):
-                K_max=L
-
-        penul_output=z_activ_func([self.x_train[:64]])
-        output=activ_func([self.x_train[:64]])
-        print("Output is",output)
-        print("Label is",self.y_train[:64])
-        print("Z is ",penul_output)
-
-        lr=float(1/K_max)
-        lr=lr*4.
-        print("Kmax",K_max)
-        print("Learning Rate new:",lr)
-
-        self.lr_history.append(lr)
-        self.K_z.append(K_max)
-
-        #plt.plot(np.arange(len(gradient_list)),gradient_list)
-        #plt.show()
-        return lr
-        #return lr
     def plot_Kz(self):
         """
         Plots Kz
         :return: None
         """
-        with open("./tests/BostonHousing/method_13/K_values","a") as fp:
+        with open("./tej_tests/BostonHousing/method_10/random_state_42/K_values","a") as fp:
             fp.write("K_z\n")
             for i in self.K_z:
                 fp.write(str(i)+"\n")
@@ -256,7 +342,7 @@ class RegressionModel(AbstractModel):
         plt.xlabel("Iteration")
         plt.ylabel("K_z")
         plt.title("K_z over time")
-        plt.savefig("./tests/BostonHousing/method_13/K_values.png")
+        plt.savefig("./tej_tests/BostonHousing/method_10/random_state_42/K_values.png")
 
     # def calculate_loss(self,x:np.ndarray,y:np.ndarray):
     #     """

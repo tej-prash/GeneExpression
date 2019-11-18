@@ -40,7 +40,7 @@ def main():
 
     if task=='regression':
         model=RegressionModel(args.dataset, n_classes=num_classes, label_column=labels, task=task, header=has_header,
-                             activation=activation, bs=bs, train_size=train_split, epochs=n_epochs, balance=False)
+                             activation=activation, bs=bs, train_size=train_split, epochs=n_epochs, balance=False,optimizer='sgd')
 
     elif args.data_type == 'numeric':
         model = NumericModel(args.dataset, n_classes=num_classes, label_column=labels, task=task, header=has_header,

@@ -14,7 +14,7 @@ def normalize_fit(data):
     :return: Normalized data
     """
     #Feature Scaling using normalisation-Activation: Linear
-    scaler = MinMaxScaler()
+    scaler = StandardScaler()
     scaler.fit(data)
     return scaler
 
@@ -68,13 +68,37 @@ def read_data(path: str, label_column: str = None, header: int = 0, balance: boo
     if label_column is None:
         label_column = df.columns[-1]
 
-    #Normalizing before splitting
-    #Feature scaling technique-MinMax Scaler
-    scaler=MinMaxScaler()
-    scaled_values=scaler.fit_transform(df.values)
-    scaled_df=pd.DataFrame(data=scaled_values,columns=df.columns)
+    # Normalizing before splitting
+    # Feature scaling technique-MinMax Scaler
+    # scaler=MinMaxScaler()
+    # df_X=df.loc[:,df.columns!=label_column]
+    # print("df_X",df_X.columns)
+    # scaled_values=scaler.fit_transform(df_X.values)
+    # scaled_df=pd.DataFrame(data=scaled_values,columns=df_X.columns)
+    # scaled_df[label_column]=df[label_column]
+    # print("scaled_df",scaled_df.columns)
+    # print(scaled_df[label_column])
+    # scaled_df.loc[:,label_column]=scaled_df.loc[:,label_column]/float(1e5)
+    # print(scaled_df[label_column])
 
-    train_df, test_df = train_test_split(scaled_df, train_size=train_size,random_state=42,shuffle=True)
+    # Feature scaling technique-Sum of features is 1
+    # print(df.columns)
+    # print("Label:",label_column)
+    # for column in df.columns:
+    #     if(column!=label_column):
+    #         print(column)
+    #         df.loc[:,column]=df.loc[:,column]/float(sum(df.loc[:,column]))
+    #     else:
+    #         df.loc[:,column]=df.loc[:,column]/float(1e5)
+    # print(df.loc[:,label_column])
+
+    # Feature scaling-Standard Scaling
+    # scaler=StandardScaler()
+    # scaled_values=scaler.fit_transform(df.values)
+    # scaled_df=pd.DataFrame(data=scaled_values,columns=df.columns)
+
+
+    train_df, test_df = train_test_split(df, train_size=train_size,random_state=42,shuffle=True)
 
     if balance:
         print("Balancing dataset")
