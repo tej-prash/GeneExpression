@@ -97,6 +97,8 @@ def read_data(path: str, label_column: str = None, header: int = 0, balance: boo
     # scaled_values=scaler.fit_transform(df.values)
     # scaled_df=pd.DataFrame(data=scaled_values,columns=df.columns)
 
+    # Normalizing y by dividing by a constant
+    # df.loc[:,label_column]=df.loc[:,label_column]/float(1e5)
 
     train_df, test_df = train_test_split(df, train_size=train_size,random_state=42,shuffle=True)
 

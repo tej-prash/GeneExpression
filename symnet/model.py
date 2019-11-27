@@ -5,6 +5,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
+path="./tests/EnergyEfficiency/suraj/sgd/trial_1"
 
 class AbstractModel:
     """
@@ -118,7 +119,7 @@ class AbstractModel:
         self.model = self._get_model()
 
         lr_scheduler = LearningRateScheduler(self._lr_schedule)
-        csv_logger=CSVLogger(filename='./tej_tests/BostonHousing/method_10/random_state_42/training_0.1.log',append='True')
+        csv_logger=CSVLogger(filename='./tej_tests/CaliforniaHousing/method_26/random_state_42/training_adaptive.log',append='True')
 
         # Prepare callbacks for model saving and for learning rate adjustment.
         save_dir = os.path.join(os.getcwd(), 'saved_models')

@@ -17,6 +17,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from keras.constraints import NonNeg
 
+path="./tests/EnergyEfficiency/suraj/sgd/trial_5"
 
 class RegressionModel(AbstractModel):
     """
@@ -53,6 +54,11 @@ class RegressionModel(AbstractModel):
             self.beta_1=0.7
             self.beta_2=0.9
             self.epsilon=1e-8
+        elif optimizer == 'AdaMo':
+            self.beta = 0.5
+            self.optimizer = SGD(momentum=self.beta)
+            self.optimizer_name = 'AdaMo'
+            print("Beta",self.beta)
         else:
             raise NotImplementedError('Only SGD optimizer is implemented!')
         if bs < 1 or not isinstance(bs, int):
@@ -110,60 +116,58 @@ class RegressionModel(AbstractModel):
         ## Single layer network architecture
         # gu=glorot_uniform(seed=54)
 
-        # x = Input(shape=(self.x_train.shape[1],))
-        # z=Dense(7,activation='relu',kernel_initializer=gu)(x)
-        # y=Dense(1,activation=self.activation,kernel_initializer=gu)(z)
+        x = Input(shape=(self.x_train.shape[1],))
+        hidden_out_1=Dense(20,activation=self.activation)(x)
+        hidden_out_2=Dense(15,activation=self.activation)(hidden_out_1)
+        y=Dense(1,activation='softsign')(hidden_out_2)
 
-        # return Model(inputs=x,outputs=y)
+        self.model = Model(inputs=x,outputs=y)
+
+        plot_model(self.model,to_file="./tej_tests/CaliforniaHousing/method_26/model_img.png",show_shapes=True,show_layer_names=True)
+
+        self.model.load_weights('./tej_tests/CaliforniaHousing/method_26/random_state_42/model_constant.h5') 
+
+        return self.model
 
         ## RES-Net like architecture
 
-        #Get saved model
-        # fp=open("./tests/BostonHousing/method_8/model_constant.json","r")
-        # loaded_model=fp.read()
-        # fp.close()
-        # self.model=model_from_json(loaded_model)
+        # inp = Input(shape=(self.x_train.shape[1],))
 
+        # bn1 = BatchNormalization(name='first_bn')(inp)
+        # dense = Dense(5, name='dense1')(bn1)
+        # act = CustomActivation(self.activation)(dense)
+        # drop1 = Dropout(0.2, name='dropout1')(act)
+
+        # bn = BatchNormalization(name='bn1')(drop1)
+        # #bn=drop1
+        # dense = Dense(5, name='dense2')(bn)
+        # act = CustomActivation(self.activation)(dense)
+        # drop2 = Dropout(0.2)(act)
+
+        # interm = Concatenate()([drop1, drop2])
+
+        # bn = BatchNormalization(name='bn2')(interm)
+        # #bn=interm
+        # dense = Dense(5, name='dense3')(bn)
+        # act = CustomActivation(self.activation)(dense)
+        # drop = Dropout(0.2)(act)
+
+        # interm = Concatenate()([drop, drop2])
+        # #bn=interm
+        # bn = BatchNormalization()(interm)
+
+        # if self.task == 'classification':
+        #     out = Dense(3, activation='softmax', name='dense4')(bn)
+        # else:
+        #     out = Dense(1,name='dense4',activation='softsign')(bn)
+
+        # self.model = Model(inputs=inp, outputs=out)
+
+        # plot_model(self.model,to_file="./tej_tests/CaliforniaHousing/model_img.png",show_shapes=True,show_layer_names=True)
+
+        # self.model.load_weights('./tej_tests/CaliforniaHousing/method_12/random_state_42/model_constant.h5') 
 
         # return self.model
-
-        inp = Input(shape=(self.x_train.shape[1],))
-
-        bn1 = BatchNormalization(name='first_bn')(inp)
-        dense = Dense(5, name='dense1')(bn1)
-        act = CustomActivation(self.activation)(dense)
-        drop1 = Dropout(0.2, name='dropout1')(act)
-
-        bn = BatchNormalization(name='bn1')(drop1)
-        #bn=drop1
-        dense = Dense(5, name='dense2')(bn)
-        act = CustomActivation(self.activation)(dense)
-        drop2 = Dropout(0.2)(act)
-
-        interm = Concatenate()([drop1, drop2])
-
-        bn = BatchNormalization(name='bn2')(interm)
-        #bn=interm
-        dense = Dense(5, name='dense3')(bn)
-        act = CustomActivation(self.activation)(dense)
-        drop = Dropout(0.2)(act)
-
-        interm = Concatenate()([drop, drop2])
-        #bn=interm
-        bn = BatchNormalization()(interm)
-
-        if self.task == 'classification':
-            out = Dense(3, activation='softmax', name='dense4')(bn)
-        else:
-            out = Dense(1,name='dense4',activation='softsign')(bn)
-
-        self.model = Model(inputs=inp, outputs=out)
-
-        # plot_model(self.model,to_file="./tej_tests/EnergyEfficiency/Y1/model_img.png",show_shapes=True,show_layer_names=True)
-
-        # self.model.load_weights('./tej_tests/BostonHousing/method_10/random_state_42/model_constant.h5') 
-
-        return self.model
 
     def _lr_schedule(self, epoch: int):
         """
@@ -178,14 +182,14 @@ class RegressionModel(AbstractModel):
 
         if(self.optimizer_name == 'sgd'):
             #Verify model weights
-            # if(epoch==0):
-            #     self.model.save_weights("./tej_tests/BostonHousing/method_10/random_state_42/model_adaptive.h5")
-
-
             if(epoch==0):
-                self.model.save_weights("./tej_tests/BostonHousing/method_10/random_state_42/model_constant.h5")
+                self.model.save_weights("./tej_tests/CaliforniaHousing/method_26/random_state_42/model_adaptive.h5")
 
-            return 0.1
+
+            # if(epoch==0):
+            #     self.model.save_weights("./tej_tests/CaliforniaHousing/method_26/random_state_42/model_constant.h5")
+
+            # return 0.1
 
             if(len(self.model.layers)!=2):
                 penultimate_activ_func = K.function([self.model.layers[0].input], [self.model.layers[-2].output])
@@ -239,7 +243,7 @@ class RegressionModel(AbstractModel):
                 if(L>K_max):
                     K_max=L
 
-            # penul_output=z_activ_func([self.x_train[:64]])
+            # penul_output=z_activ_func([self.x_train[64:128]])
             # output=activ_func([self.x_train[:64]])
             # print("Output is",output)
             # print("Label is",self.y_train[:64])
@@ -329,12 +333,72 @@ class RegressionModel(AbstractModel):
 
             return lr
 
+        elif(self.optimizer_name == 'AdaMo'):
+            #Verify model weights
+            if(epoch==0):
+                self.model.save_weights("./tej_tests/CaliforniaHousing/method_30/random_state_42/model_adaptive.h5")
+
+
+            # if(epoch==0):
+            #     self.model.save_weights("./tej_tests/CaliforniaHousing/method_30/random_state_42/model_constant.h5")
+
+            # return 0.1
+
+            if(len(self.model.layers)!=2):
+                penultimate_activ_func = K.function([self.model.layers[0].input], [self.model.layers[-2].output])
+
+            #Maximum Lipschitz constant
+            K_max=-1.0
+            for i in range(((len(self.x_train) - 1) // self.bs + 1)):
+                start_i=i*self.bs
+                end_i=start_i+self.bs
+                xb=self.x_train[start_i:end_i]
+                y=self.y_train[start_i:end_i]
+                if(len(self.model.layers)>2):  
+                    ##Using the theoretical framework
+                    # activ=np.linalg.norm(penultimate_activ_func([xb]),axis=0)
+                    # Kz=np.max(activ)
+
+                    ##Using the previous code
+                    activ=np.linalg.norm(penultimate_activ_func([xb]))
+                    Kz=activ
+
+                else:
+                    ##Using the theoretical framework
+                    # activ=np.linalg.norm((xb),axis=0)
+                    # Kz=np.max(activ)
+
+                    ##Using the previous code
+                    activ=np.linalg.norm([xb])
+                    Kz=activ
+
+
+                L=Kz/float(self.bs)
+                if(L>K_max):
+                    K_max=L
+
+            K_prime = 0.0
+            if(epoch == 0):
+                K_prime = K_max 
+            else:
+                K_prime = (self.beta * self.K_z[-1]) + (1 - self.beta)*(K_max)
+
+            lr=float(1/K_prime)
+            print("Kprime",K_prime)
+            print("Learning Rate new:",lr)
+
+            self.lr_history.append(lr)
+            self.K_z.append(K_prime)
+
+            return lr
+
+
     def plot_Kz(self):
         """
         Plots Kz
         :return: None
         """
-        with open("./tej_tests/BostonHousing/method_10/random_state_42/K_values","a") as fp:
+        with open("./tej_tests/CaliforniaHousing/method_26/random_state_42/K_values","a") as fp:
             fp.write("K_z\n")
             for i in self.K_z:
                 fp.write(str(i)+"\n")
@@ -342,7 +406,7 @@ class RegressionModel(AbstractModel):
         plt.xlabel("Iteration")
         plt.ylabel("K_z")
         plt.title("K_z over time")
-        plt.savefig("./tej_tests/BostonHousing/method_10/random_state_42/K_values.png")
+        plt.savefig("./tej_tests/CaliforniaHousing/method_26/random_state_42/K_values.png")
 
     # def calculate_loss(self,x:np.ndarray,y:np.ndarray):
     #     """
