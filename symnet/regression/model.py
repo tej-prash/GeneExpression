@@ -17,7 +17,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from keras.constraints import NonNeg
 
-path="./tests/EnergyEfficiency/suraj/sgd/trial_5"
+# path="./tests/EnergyEfficiency/suraj/sgd/trial_5"
 
 class RegressionModel(AbstractModel):
     """
@@ -181,6 +181,7 @@ class RegressionModel(AbstractModel):
             raise ValueError('x_train is None')
 
         if(self.optimizer_name == 'sgd'):
+<<<<<<< HEAD
             #Verify model weights
             if(epoch==0):
                 self.model.save_weights("./tej_tests/CaliforniaHousing/method_26/random_state_42/model_adaptive.h5")
@@ -188,6 +189,15 @@ class RegressionModel(AbstractModel):
 
             # if(epoch==0):
             #     self.model.save_weights("./tej_tests/CaliforniaHousing/method_26/random_state_42/model_constant.h5")
+=======
+            # Verify model weights
+            if(epoch==0):
+                self.model.save_weights(path+"/model_adaptive.h5")
+
+
+            # if(epoch==0):
+            #     self.model.save_weights(path+"/model_constant.h5")
+>>>>>>> 46ca912065813a1cb956132787426f24422a38c7
 
             # return 0.1
 
@@ -266,11 +276,11 @@ class RegressionModel(AbstractModel):
 
             #Verify model weights
             if(epoch==0):
-                self.model.save_weights("./tej_tests/CaliforniaHousing/method_19/model_adaptive.h5")
+                self.model.save_weights(path+"/model_adaptive.h5")
 
 
             # if(epoch==0):
-            #     self.model.save_weights("./tej_tests/CaliforniaHousing/method_19/model_constant.h5")
+            #     self.model.save_weights(path+"/model_constant.h5")
 
             # return 0.001
 
@@ -398,7 +408,11 @@ class RegressionModel(AbstractModel):
         Plots Kz
         :return: None
         """
+<<<<<<< HEAD
         with open("./tej_tests/CaliforniaHousing/method_26/random_state_42/K_values","a") as fp:
+=======
+        with open(path+"/K_values","a") as fp:
+>>>>>>> 46ca912065813a1cb956132787426f24422a38c7
             fp.write("K_z\n")
             for i in self.K_z:
                 fp.write(str(i)+"\n")
@@ -406,7 +420,11 @@ class RegressionModel(AbstractModel):
         plt.xlabel("Iteration")
         plt.ylabel("K_z")
         plt.title("K_z over time")
+<<<<<<< HEAD
         plt.savefig("./tej_tests/CaliforniaHousing/method_26/random_state_42/K_values.png")
+=======
+        plt.savefig(path+"/K_values.png")
+>>>>>>> 46ca912065813a1cb956132787426f24422a38c7
 
     # def calculate_loss(self,x:np.ndarray,y:np.ndarray):
     #     """
