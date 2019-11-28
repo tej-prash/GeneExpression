@@ -53,7 +53,7 @@ def main():
     model.fit()
     loss, accuracy = model.score()
     print('Loss =', loss, '\nAccuracy =', accuracy)
-    model.plot_Kz()
+    # model.plot_Kz()
     #Predict model
     # loss=model.calculate_loss(model.x_test,model.y_test)
     # print('Loss =', loss)

@@ -119,7 +119,7 @@ class AbstractModel:
         self.model = self._get_model()
 
         lr_scheduler = LearningRateScheduler(self._lr_schedule)
-        csv_logger=CSVLogger(filename='./tej_tests/CaliforniaHousing/method_26/random_state_42/training_adaptive.log',append='True')
+        # csv_logger=CSVLogger(filename='./tej_tests/CaliforniaHousing/method_31/random_state_42/training_0.1.log',append='True')
 
         # Prepare callbacks for model saving and for learning rate adjustme
         # nt.
@@ -141,7 +141,7 @@ class AbstractModel:
 
         if finish_fit:
             self.model.fit(self.x_train, self.y_train, validation_data=(self.x_test, self.y_test), epochs=self.epochs,
-                           batch_size=self.bs, shuffle=True, callbacks=[lr_scheduler, checkpoint,csv_logger])
+                           batch_size=self.bs, shuffle=True, callbacks=[lr_scheduler, checkpoint])
 
     def predict(self, x: np.ndarray):
         """

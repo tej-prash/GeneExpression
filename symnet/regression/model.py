@@ -116,16 +116,23 @@ class RegressionModel(AbstractModel):
         ## Single layer network architecture
         # gu=glorot_uniform(seed=54)
 
+        # x = Input(shape=(self.x_train.shape[1],))
+        # hidden_out_1=Dense(20)(x)
+        # act_1 = CustomActivation(self.activation)(hidden_out_1)
+        # hidden_out_2=Dense(15)(act_1)
+        # act_2 = CustomActivation(self.activation)(hidden_out_2)
+        # y=Dense(1,activation='softsign')(act_2)
+
         x = Input(shape=(self.x_train.shape[1],))
-        hidden_out_1=Dense(20,activation=self.activation)(x)
-        hidden_out_2=Dense(15,activation=self.activation)(hidden_out_1)
-        y=Dense(1,activation='softsign')(hidden_out_2)
+        hidden_out_1=Dense(20)(x)
+        act_1 = CustomActivation(self.activation)(hidden_out_1)
+        y=Dense(1,activation='softsign')(act_1)
 
         self.model = Model(inputs=x,outputs=y)
 
-        plot_model(self.model,to_file="./tej_tests/CaliforniaHousing/method_26/model_img.png",show_shapes=True,show_layer_names=True)
+        plot_model(self.model,to_file="./tej_tests/BostonHousing/model_img_2.png",show_shapes=True,show_layer_names=True)
 
-        self.model.load_weights('./tej_tests/CaliforniaHousing/method_26/random_state_42/model_constant.h5') 
+        # self.model.load_weights('./tej_tests/CaliforniaHousing/method_26/random_state_42/model_constant.h5') 
 
         return self.model
 
@@ -181,23 +188,13 @@ class RegressionModel(AbstractModel):
             raise ValueError('x_train is None')
 
         if(self.optimizer_name == 'sgd'):
-<<<<<<< HEAD
             #Verify model weights
-            if(epoch==0):
-                self.model.save_weights("./tej_tests/CaliforniaHousing/method_26/random_state_42/model_adaptive.h5")
+            # if(epoch==0):
+            #     self.model.save_weights("./tej_tests/CaliforniaHousing/method_26/random_state_42/model_adaptive.h5")
 
 
             # if(epoch==0):
-            #     self.model.save_weights("./tej_tests/CaliforniaHousing/method_26/random_state_42/model_constant.h5")
-=======
-            # Verify model weights
-            if(epoch==0):
-                self.model.save_weights(path+"/model_adaptive.h5")
-
-
-            # if(epoch==0):
-            #     self.model.save_weights(path+"/model_constant.h5")
->>>>>>> 46ca912065813a1cb956132787426f24422a38c7
+            #     self.model.save_weights("./tej_tests/CaliforniaHousing/method_31/random_state_42/model_constant.h5")
 
             # return 0.1
 
@@ -228,6 +225,7 @@ class RegressionModel(AbstractModel):
 
                     ##Using the previous code
                     activ=np.linalg.norm(penultimate_activ_func([xb]))
+                    # print(penultimate_activ_func([xb]))
                     Kz=activ
 
                 else:
@@ -408,11 +406,7 @@ class RegressionModel(AbstractModel):
         Plots Kz
         :return: None
         """
-<<<<<<< HEAD
         with open("./tej_tests/CaliforniaHousing/method_26/random_state_42/K_values","a") as fp:
-=======
-        with open(path+"/K_values","a") as fp:
->>>>>>> 46ca912065813a1cb956132787426f24422a38c7
             fp.write("K_z\n")
             for i in self.K_z:
                 fp.write(str(i)+"\n")
@@ -420,11 +414,7 @@ class RegressionModel(AbstractModel):
         plt.xlabel("Iteration")
         plt.ylabel("K_z")
         plt.title("K_z over time")
-<<<<<<< HEAD
         plt.savefig("./tej_tests/CaliforniaHousing/method_26/random_state_42/K_values.png")
-=======
-        plt.savefig(path+"/K_values.png")
->>>>>>> 46ca912065813a1cb956132787426f24422a38c7
 
     # def calculate_loss(self,x:np.ndarray,y:np.ndarray):
     #     """
