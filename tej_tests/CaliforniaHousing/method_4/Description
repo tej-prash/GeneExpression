@@ -1,9 +1,0 @@
-Scaling Technique: Sum of each feature=1, followed by splitting the dataset
-Activation in final Layer: ReLU
-Batch Normalisation done
-ResNet architecture with ReLU as activation functions
-
-y_train is of the order 10^-5
-training loss is of the order 10^-5
-validation loss is of the order 10^-5
-Network suffers from vanishing gradient problem

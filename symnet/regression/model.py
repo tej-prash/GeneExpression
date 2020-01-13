@@ -2,7 +2,7 @@ from symnet.data_utils import read_data,normalize,normalize_fit
 from keras.models import Model,model_from_json
 from symnet import AbstractModel, CustomActivation
 from symnet.activations import ARelu,SBAF
-from keras.callbacks import LearningRateScheduler
+from keras.callbacks import LearningRateScheduler, LambdaCallback
 from keras.optimizers import SGD,Adam
 from keras.layers import Dense, Input, Dropout, Concatenate,BatchNormalization,LeakyReLU
 import os
@@ -17,7 +17,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from keras.constraints import NonNeg
 
-# path="./tests/EnergyEfficiency/suraj/sgd/trial_5"
+base_path="./tej_tests/GeneDataset/method_1/"
 
 class RegressionModel(AbstractModel):
     """
@@ -25,7 +25,7 @@ class RegressionModel(AbstractModel):
     """
     def __init__(self, path: str, n_classes: int = 0, activation='relu', task: str = 'regression',
                  bs: int = 64, train_size: float = 0.7, optimizer: str = 'sgd', epochs: int = 100,
-                 balance: bool = True,label_column:str=None,header:int=0):
+                 balance: bool = True,label_column:str=None,header:int=0,f_type='csv'):
         """
         Initializes a RegressionModel instance.
         :param path: Path to the CSV file
@@ -37,6 +37,7 @@ class RegressionModel(AbstractModel):
         :param optimizer: Optimizer for neural network
         :param epochs: Number of epochs
         :param balance: Boolean. If True, balance the dataset before classification
+        :param f_type: str. Type of file(binary/csv)
         """
 
         if not os.path.exists(path):
@@ -74,6 +75,7 @@ class RegressionModel(AbstractModel):
         self.train_size = train_size
         self.n_classes = n_classes
         self.epochs = epochs
+        self.file_type=f_type
         self.balance = balance
 
         self.lr_history = []
@@ -87,8 +89,12 @@ class RegressionModel(AbstractModel):
         self.label_column = label_column
 
         self.x_train, self.x_test, self.y_train, self.y_test = \
-            read_data(path, label_column, header, balance=self.balance, train_size=self.train_size,categorize=False) 
+            read_data(path, label_column, header, balance=self.balance, train_size=self.train_size,categorize=False,file_type=self.file_type) 
         
+        # Logging data header
+        with open(base_path+"output_record","a") as fp:
+            fp.write("Epoch,")
+
         #Feature scaling only on X
         # self.scaler_x=tuple(map(normalize_fit,[self.x_train]))[0]
         # self.x_train=tuple(map(normalize,[self.x_train],[self.scaler_x]))[0]
@@ -103,9 +109,9 @@ class RegressionModel(AbstractModel):
         # plt.savefig('./tests/method_14/dist_y_train_y_test.png')
 
         #Feature scaling on X and Y
-        self.scaler_x,self.scaler_y=tuple(map(normalize_fit,[self.x_train,self.y_train.reshape(-1,1)]))
-        self.x_train,self.y_train=tuple(map(normalize,[self.x_train,self.y_train.reshape(-1,1)],[self.scaler_x,self.scaler_y]))
-        self.x_test,self.y_test=tuple(map(normalize,[self.x_test,self.y_test.reshape(-1,1)],[self.scaler_x,self.scaler_y]))
+        # self.scaler_x,self.scaler_y=tuple(map(normalize_fit,[self.x_train,self.y_train.reshape(-1,1)]))
+        # self.x_train,self.y_train=tuple(map(normalize,[self.x_train,self.y_train.reshape(-1,1)],[self.scaler_x,self.scaler_y]))
+        # self.x_test,self.y_test=tuple(map(normalize,[self.x_test,self.y_test.reshape(-1,1)],[self.scaler_x,self.scaler_y]))
         
         print(self.x_train.shape)
 
@@ -124,13 +130,13 @@ class RegressionModel(AbstractModel):
         # y=Dense(1,activation='softsign')(act_2)
 
         x = Input(shape=(self.x_train.shape[1],))
-        hidden_out_1=Dense(20)(x)
-        act_1 = CustomActivation(self.activation)(hidden_out_1)
-        y=Dense(1,activation='softsign')(act_1)
+        hidden_out_1=Dense(3000,activation='tanh')(x)
+        act_out_1=Dropout(0.1)(hidden_out_1)
+        y=Dense(self.y_train.shape[1],activation='linear')(act_out_1)
 
         self.model = Model(inputs=x,outputs=y)
 
-        plot_model(self.model,to_file="./tej_tests/BostonHousing/model_img_2.png",show_shapes=True,show_layer_names=True)
+        # plot_model(self.model,to_file="./tej_tests/BostonHousing/model_img_2.png",show_shapes=True,show_layer_names=True)
 
         # self.model.load_weights('./tej_tests/CaliforniaHousing/method_26/random_state_42/model_constant.h5') 
 
@@ -176,11 +182,78 @@ class RegressionModel(AbstractModel):
 
         # return self.model
 
+    def record_output(self,epoch,logs):
+        """
+        Log output of every output unit
+        :param epoch : int Epoch number
+        :param logs : logs collected during epoch
+        """
+        if(len(self.model.layers)!=2):
+                activ_func = K.function([self.model.layers[0].input], [self.model.output])
+
+        # Training data
+        end_i = self.x_train.shape[0]
+        diff = self.x_train.shape[0]%self.bs
+
+        if(diff==0):
+            start_i = end_i - self.bs
+        else:
+            start_i = end_i - diff
+
+        xb=self.x_train[start_i:end_i]
+        y=self.y_train[start_i:end_i]
+        if(len(self.model.layers)>2):  
+            ##Using the theoretical framework
+            # activ=np.linalg.norm(penultimate_activ_func([xb]),axis=0)
+            # Kz=np.max(activ)
+
+            ##Using the previous code
+            activ=activ_func([xb])
+        
+        activ_mean_train=np.mean(activ,axis=0)
+        y_mean_train = np.mean(y,axis=0)
+
+        # Validation data
+        end_i = self.x_test.shape[0]
+        diff = self.x_test.shape[0]%self.bs
+
+        if(diff==0):
+            start_i = end_i - self.bs
+        else:
+            start_i = end_i - diff
+
+        xb=self.x_test[start_i:end_i]
+        y=self.y_test[start_i:end_i]
+        if(len(self.model.layers)>2):  
+            ##Using the theoretical framework
+            # activ=np.linalg.norm(penultimate_activ_func([xb]),axis=0)
+            # Kz=np.max(activ)
+
+            ##Using the previous code
+            activ=activ_func([xb])
+        
+        activ_mean_test=np.mean(activ,axis=0)
+        y_mean_test = np.mean(y,axis=0)
+        
+        with open(base_path+"output_record","a") as fp:
+            # Epoch,Predicted_train,y_train,predicted_test,y_test
+            fp.write(str(epoch)+",")
+            for i in activ_mean_train:
+                fp.write(str(i)+",")
+            for i in y_mean_train:
+                fp.write(str(i)+",")
+            for i in activ_mean_test:
+                fp.write(str(i)+",")
+            for i in y_mean_test:
+                fp.write(str(i)+",")
+            fp.write("\n")
+
+
     def _lr_schedule(self, epoch: int):
         """
         Get the learning rate for a given epoch. Note that this uses the LipschitzLR policy, so the epoch
         number doesn't actually matter.
-        :param epoch: int. Epoch number
+        :param epoch : int. Epoch number
         :return: learning rate
         """
 
@@ -343,14 +416,14 @@ class RegressionModel(AbstractModel):
 
         elif(self.optimizer_name == 'AdaMo'):
             #Verify model weights
-            if(epoch==0):
-                self.model.save_weights("./tej_tests/CaliforniaHousing/method_30/random_state_42/model_adaptive.h5")
-
-
             # if(epoch==0):
-            #     self.model.save_weights("./tej_tests/CaliforniaHousing/method_30/random_state_42/model_constant.h5")
+                # self.model.save_weights("./tej_tests/CaliforniaHousing/method_30/random_state_42/model_adaptive.h5")
 
-            # return 0.1
+
+            if(epoch==0):
+                self.model.save_weights(base_path+"model_constant.h5")
+
+            return 1e-5
 
             if(len(self.model.layers)!=2):
                 penultimate_activ_func = K.function([self.model.layers[0].input], [self.model.layers[-2].output])

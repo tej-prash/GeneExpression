@@ -20,7 +20,7 @@ parser.add_argument('--train-split', type=float, default=0.7, help='Split to use
 parser.add_argument('--epochs', type=int, default=100, help='Number of epochs')
 parser.add_argument('--no-balance', action='store_true', help='Do not rebalance classes')
 parser.add_argument('--no-augment', action='store_true', help='Do not augment data for image datasets')
-
+parser.add_argument('--file-type',type=str,help='Type of file to process(binary/csv)',default='csv')
 
 def main():
     #Fix weights
@@ -40,7 +40,7 @@ def main():
 
     if task=='regression':
         model=RegressionModel(args.dataset, n_classes=num_classes, label_column=labels, task=task, header=has_header,
-                             activation=activation, bs=bs, train_size=train_split, epochs=n_epochs, balance=False,optimizer='sgd')
+                             activation=activation, bs=bs, train_size=train_split, epochs=n_epochs, balance=False,optimizer='sgd',f_type=args.file_type)
 
     elif args.data_type == 'numeric':
         model = NumericModel(args.dataset, n_classes=num_classes, label_column=labels, task=task, header=has_header,

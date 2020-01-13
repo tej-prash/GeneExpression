@@ -4,8 +4,9 @@ from keras import backend as K
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+from keras.callbacks import LambdaCallback
 
-# path="./tests/EnergyEfficiency/suraj/sgd/trial_1"
+base_path="./tej_tests/GeneDataset/method_1/"
 
 class AbstractModel:
     """
@@ -97,6 +98,9 @@ class AbstractModel:
         self.lr_history.append(lr)
         return lr
 
+    def record_output(self,epoch,logs):
+        pass
+
     def fit(self, finish_fit: bool = True):
         """
         Fit to data.
@@ -119,10 +123,10 @@ class AbstractModel:
         self.model = self._get_model()
 
         lr_scheduler = LearningRateScheduler(self._lr_schedule)
-        # csv_logger=CSVLogger(filename='./tej_tests/CaliforniaHousing/method_31/random_state_42/training_0.1.log',append='True')
+        csv_logger=CSVLogger(filename=base_path+'training_0.1.log',append='True')
+        individual_record_callback=LambdaCallback(on_epoch_end=self.record_output)
 
-        # Prepare callbacks for model saving and for learning rate adjustme
-        # nt.
+        # Prepare callbacks for model saving and for learning rate adjustment.
         save_dir = os.path.join(os.getcwd(), 'saved_models')
         model_name = 'model.{epoch:03d}.h5'
 
@@ -138,10 +142,19 @@ class AbstractModel:
         print("self.optimizer",self.optimizer)
         self.model.compile(self.optimizer, loss=self.loss, metrics=self.metrics)
 
-
         if finish_fit:
             self.model.fit(self.x_train, self.y_train, validation_data=(self.x_test, self.y_test), epochs=self.epochs,
-                           batch_size=self.bs, shuffle=True, callbacks=[lr_scheduler, checkpoint])
+                           batch_size=self.bs, shuffle=True, callbacks=[lr_scheduler, checkpoint,csv_logger,individual_record_callback])
+
+        # Save model 
+
+        # Save model weights
+        self.model.save_weights(base_path+"model_weights.h5")
+
+        # Save model architecture as json
+        model_json = self.model.to_json()
+        with open(base_path+"model.json","w") as json_file:
+            json_file.write(model_json)
 
     def predict(self, x: np.ndarray):
         """
