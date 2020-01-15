@@ -57,19 +57,22 @@ def read_data(path: str, label_column: str = None, header: int = 0, balance: boo
     :param file_type: str. If binary, a binary npy file is read. If csv, a csv file is read. 
     :return: (X, y) tuple
     """
-    if path is None or not os.path.exists(path):
+    if file_type=='csv' and (path is None or not os.path.exists(path)):
         print('WARNING: Path does not exist, or is None.')
         return [[]], []
+        
     if(file_type=='binary'):
+        print("Reading a binary file")
         # Read a npy file 
         x_train_path,y_train_path,x_val_path,y_val_path=tuple(path.split(","))
+        print(x_train_path,y_train_path,x_val_path,y_val_path)
         
         x_train=np.load(x_train_path)
         y_train=np.load(y_train_path)
         x_test=np.load(x_val_path)
         y_test=np.load(y_val_path)
 
-    if(file_type=='csv'):
+    elif(file_type=='csv'):
         df = pd.read_csv(path, header=header)
         if len(df.columns) == 0:
             print('WARNING: File has no columns')

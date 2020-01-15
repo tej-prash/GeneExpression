@@ -41,7 +41,8 @@ class RegressionModel(AbstractModel):
         """
 
         if not os.path.exists(path):
-            raise FileNotFoundError('Path does not exist')
+            if(f_type=='csv'):
+                raise FileNotFoundError('Path does not exist')
         if n_classes > 1:
             raise ValueError('n_classes must be 1.')
         if optimizer == 'sgd':
@@ -92,8 +93,8 @@ class RegressionModel(AbstractModel):
             read_data(path, label_column, header, balance=self.balance, train_size=self.train_size,categorize=False,file_type=self.file_type) 
         
         # Logging data header
-        with open(base_path+"output_record","a") as fp:
-            fp.write("Epoch,")
+        # with open(base_path+"output_record","a") as fp:
+        #     fp.write("Epoch,")
 
         #Feature scaling only on X
         # self.scaler_x=tuple(map(normalize_fit,[self.x_train]))[0]
@@ -210,7 +211,7 @@ class RegressionModel(AbstractModel):
             ##Using the previous code
             activ=activ_func([xb])
         
-        activ_mean_train=np.mean(activ,axis=0)
+        activ_mean_train=np.mean(activ[0],axis=0)
         y_mean_train = np.mean(y,axis=0)
 
         # Validation data
@@ -232,12 +233,13 @@ class RegressionModel(AbstractModel):
             ##Using the previous code
             activ=activ_func([xb])
         
-        activ_mean_test=np.mean(activ,axis=0)
+        activ_mean_test=np.mean(activ[0],axis=0)
         y_mean_test = np.mean(y,axis=0)
         
         with open(base_path+"output_record","a") as fp:
             # Epoch,Predicted_train,y_train,predicted_test,y_test
             fp.write(str(epoch)+",")
+            print(activ_mean_test.shape,activ_mean_test.shape,y_mean_train.shape,y_mean_test.shape)
             for i in activ_mean_train:
                 fp.write(str(i)+",")
             for i in y_mean_train:
@@ -418,7 +420,7 @@ class RegressionModel(AbstractModel):
             #Verify model weights
             # if(epoch==0):
                 # self.model.save_weights("./tej_tests/CaliforniaHousing/method_30/random_state_42/model_adaptive.h5")
-
+            print("In AdaMo!")
 
             if(epoch==0):
                 self.model.save_weights(base_path+"model_constant.h5")

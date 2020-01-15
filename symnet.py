@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--task', type=str, required=True, help='Type of task (classification)')
 parser.add_argument('--dataset', type=str, required=True, help='The dataset to train from')
 parser.add_argument('--data-type', type=str, required=True, help='Type of data')
-parser.add_argument('--labels', type=str, required=True, help='The source of labels')
+parser.add_argument('--labels', type=str, default="None", help='The source of labels')
 parser.add_argument('--num-classes', type=int, help='Number of classes in classification problems')
 parser.add_argument('--activation', type=str, default='relu', help='Activation function')
 parser.add_argument('--no-header', action='store_true', help='No header in the CSV file')
@@ -40,7 +40,7 @@ def main():
 
     if task=='regression':
         model=RegressionModel(args.dataset, n_classes=num_classes, label_column=labels, task=task, header=has_header,
-                             activation=activation, bs=bs, train_size=train_split, epochs=n_epochs, balance=False,optimizer='sgd',f_type=args.file_type)
+                             activation=activation, bs=bs, train_size=train_split, epochs=n_epochs, balance=False,optimizer='AdaMo',f_type=args.file_type)
 
     elif args.data_type == 'numeric':
         model = NumericModel(args.dataset, n_classes=num_classes, label_column=labels, task=task, header=has_header,
