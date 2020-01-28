@@ -11,7 +11,7 @@ setup(name='symnet',
       packages=find_packages(),
       install_requires=[
           'keras==2.2.4',
-          'tensorflow==1.14.0',
+          'tensorflow==1.15.2',
           'numpy==1.16.4',
           'matplotlib==3.1.0',
           'pandas==0.24.2',
