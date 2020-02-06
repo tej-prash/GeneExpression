@@ -40,7 +40,7 @@ def main():
 
     if task=='regression':
         model=RegressionModel(args.dataset, n_classes=num_classes, label_column=labels, task=task, header=has_header,
-                             activation=activation, bs=bs, train_size=train_split, epochs=n_epochs, balance=False,optimizer='AdaMo',f_type=args.file_type)
+                             activation=activation, bs=bs, train_size=train_split, epochs=n_epochs, balance=False,optimizer='sgd',f_type=args.file_type)
 
     elif args.data_type == 'numeric':
         model = NumericModel(args.dataset, n_classes=num_classes, label_column=labels, task=task, header=has_header,
@@ -53,7 +53,7 @@ def main():
     model.fit()
     loss, accuracy = model.score()
     print('Loss =', loss, '\nAccuracy =', accuracy)
-    # model.plot_Kz()
+    model.plot_Kz()
     #Predict model
     # loss=model.calculate_loss(model.x_test,model.y_test)
     # print('Loss =', loss)

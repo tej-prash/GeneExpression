@@ -6,7 +6,7 @@ import os
 import matplotlib.pyplot as plt
 from keras.callbacks import LambdaCallback
 
-base_path="./tej_tests/GeneDataset/method_1/"
+base_path="./tej_tests/GeneDataset/method_5/"
 
 class AbstractModel:
     """
@@ -100,6 +100,12 @@ class AbstractModel:
 
     def record_output(self,epoch,logs):
         pass
+    
+    def constant_LR_decay(self,epoch: int,decay_factor: float):
+        """
+        Return the learning rate for decay based scheduler
+        """
+        pass
 
     def fit(self, finish_fit: bool = True):
         """
@@ -123,7 +129,7 @@ class AbstractModel:
         self.model = self._get_model()
 
         lr_scheduler = LearningRateScheduler(self._lr_schedule)
-        csv_logger=CSVLogger(filename=base_path+'training_0.1.log',append='True')
+        csv_logger=CSVLogger(filename=base_path+'training_adaptive.log',append='True')
         individual_record_callback=LambdaCallback(on_epoch_end=self.record_output)
 
         # Prepare callbacks for model saving and for learning rate adjustment.
@@ -149,11 +155,11 @@ class AbstractModel:
         # Save model 
 
         # Save model weights
-        self.model.save_weights(base_path+"model_weights.h5")
+        self.model.save_weights(base_path+"adaptive/trial_1/model_weights.h5")
 
         # Save model architecture as json
         model_json = self.model.to_json()
-        with open(base_path+"model.json","w") as json_file:
+        with open(base_path+"adaptive/trial_1/model.json","w") as json_file:
             json_file.write(model_json)
 
     def predict(self, x: np.ndarray):

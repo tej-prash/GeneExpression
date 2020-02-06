@@ -17,7 +17,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from keras.constraints import NonNeg
 
-base_path="./tej_tests/GeneDataset/method_1/"
+base_path="./tej_tests/GeneDataset/method_5/"
 
 class RegressionModel(AbstractModel):
     """
@@ -114,7 +114,7 @@ class RegressionModel(AbstractModel):
         # self.x_train,self.y_train=tuple(map(normalize,[self.x_train,self.y_train.reshape(-1,1)],[self.scaler_x,self.scaler_y]))
         # self.x_test,self.y_test=tuple(map(normalize,[self.x_test,self.y_test.reshape(-1,1)],[self.scaler_x,self.scaler_y]))
         
-        print(self.x_train.shape)
+        print(self.y_train.shape)
 
     def _get_model(self):
         """
@@ -131,15 +131,20 @@ class RegressionModel(AbstractModel):
         # y=Dense(1,activation='softsign')(act_2)
 
         x = Input(shape=(self.x_train.shape[1],))
-        hidden_out_1=Dense(3000,activation='tanh')(x)
+
+        hidden_out_1=Dense(1000,activation='tanh')(x)
         act_out_1=Dropout(0.1)(hidden_out_1)
-        y=Dense(self.y_train.shape[1],activation='linear')(act_out_1)
+
+        hidden_out_2=Dense(1000,activation='tanh')(act_out_1)
+        act_out_2=Dropout(0.1)(hidden_out_2)
+
+        y=Dense(self.y_train.shape[1],activation='softsign')(act_out_2)
 
         self.model = Model(inputs=x,outputs=y)
 
         # plot_model(self.model,to_file="./tej_tests/BostonHousing/model_img_2.png",show_shapes=True,show_layer_names=True)
 
-        # self.model.load_weights('./tej_tests/CaliforniaHousing/method_26/random_state_42/model_constant.h5') 
+        # self.model.load_weights(base_path+'model_adaptive.h5') 
 
         return self.model
 
@@ -236,10 +241,10 @@ class RegressionModel(AbstractModel):
         activ_mean_test=np.mean(activ[0],axis=0)
         y_mean_test = np.mean(y,axis=0)
         
-        with open(base_path+"output_record","a") as fp:
+        with open(base_path+"output_record_adaptive","a") as fp:
             # Epoch,Predicted_train,y_train,predicted_test,y_test
             fp.write(str(epoch)+",")
-            print(activ_mean_test.shape,activ_mean_test.shape,y_mean_train.shape,y_mean_test.shape)
+            print(activ_mean_train.shape,activ_mean_test.shape,y_mean_train.shape,y_mean_test.shape)
             for i in activ_mean_train:
                 fp.write(str(i)+",")
             for i in y_mean_train:
@@ -249,6 +254,21 @@ class RegressionModel(AbstractModel):
             for i in y_mean_test:
                 fp.write(str(i)+",")
             fp.write("\n")
+
+    def constant_LR_decay(self,epoch: int,decay_factor: float):
+        """
+        Return the learning rate for decay based scheduler
+        """
+        initial_LR = 5 * (1e-4)
+        if(epoch==0):
+            self.model.save_weights(base_path+"model_constant.h5")
+            self.lr_history.append(initial_LR)
+            return self.lr_history[-1]
+        lr = self.lr_history[-1] * 0.9
+        if (lr < 1e-5):
+            lr = 1e-5
+        self.lr_history.append(lr)
+        return lr 
 
 
     def _lr_schedule(self, epoch: int):
@@ -264,14 +284,15 @@ class RegressionModel(AbstractModel):
 
         if(self.optimizer_name == 'sgd'):
             #Verify model weights
-            # if(epoch==0):
-            #     self.model.save_weights("./tej_tests/CaliforniaHousing/method_26/random_state_42/model_adaptive.h5")
+            if(epoch==0):
+                self.model.save_weights(base_path+"model_adaptive.h5")
 
-
+            # constant LR with decay
+            # return self.constant_LR_decay(epoch,0.9)
             # if(epoch==0):
             #     self.model.save_weights("./tej_tests/CaliforniaHousing/method_31/random_state_42/model_constant.h5")
 
-            # return 0.1
+            # return 1 * (1e-5)
 
             if(len(self.model.layers)!=2):
                 penultimate_activ_func = K.function([self.model.layers[0].input], [self.model.layers[-2].output])
@@ -287,12 +308,11 @@ class RegressionModel(AbstractModel):
             #grads_func=K.function(inputs,grads)
 
             #Maximum Lipschitz constant
-            K_max=-1
+            K_max=-100000.0
             for i in range(((len(self.x_train) - 1) // self.bs + 1)):
                 start_i=i*self.bs
                 end_i=start_i+self.bs
                 xb=self.x_train[start_i:end_i]
-                y=self.y_train[start_i:end_i]
                 if(len(self.model.layers)>2):  
                     ##Using the theoretical framework
                     # activ=np.linalg.norm(penultimate_activ_func([xb]),axis=0)
@@ -300,6 +320,7 @@ class RegressionModel(AbstractModel):
 
                     ##Using the previous code
                     activ=np.linalg.norm(penultimate_activ_func([xb]))
+                    # print(activ.shape)
                     # print(penultimate_activ_func([xb]))
                     Kz=activ
 
@@ -322,7 +343,7 @@ class RegressionModel(AbstractModel):
                 # evaluated_grads=grads_func([xb,y,weight_matrices])
                 # print(evaluated_grads)    
                 #print("kz is :",Kz)
-                L=Kz/float(self.bs)
+                L=Kz
                 if(L>K_max):
                     K_max=L
 
@@ -331,8 +352,9 @@ class RegressionModel(AbstractModel):
             # print("Output is",output)
             # print("Label is",self.y_train[:64])
             # print("Z is ",penul_output)
-
+            K_max = K_max/(self.bs * self.y_train.shape[1])
             lr=float(1/K_max)
+            # lr = lr / 4000.0
             print("Kmax",K_max)
             print("Learning Rate new:",lr)
 
@@ -418,14 +440,14 @@ class RegressionModel(AbstractModel):
 
         elif(self.optimizer_name == 'AdaMo'):
             #Verify model weights
-            # if(epoch==0):
-                # self.model.save_weights("./tej_tests/CaliforniaHousing/method_30/random_state_42/model_adaptive.h5")
+            if(epoch==0):
+                self.model.save_weights(base_path+"model_adaptive.h5")
             print("In AdaMo!")
 
-            if(epoch==0):
-                self.model.save_weights(base_path+"model_constant.h5")
+            # if(epoch==0):
+            #     self.model.save_weights(base_path+"model_constant.h5")
 
-            return 1e-5
+            # return 1e-4
 
             if(len(self.model.layers)!=2):
                 penultimate_activ_func = K.function([self.model.layers[0].input], [self.model.layers[-2].output])
@@ -436,7 +458,7 @@ class RegressionModel(AbstractModel):
                 start_i=i*self.bs
                 end_i=start_i+self.bs
                 xb=self.x_train[start_i:end_i]
-                y=self.y_train[start_i:end_i]
+                # y=self.y_train[start_i:end_i]
                 if(len(self.model.layers)>2):  
                     ##Using the theoretical framework
                     # activ=np.linalg.norm(penultimate_activ_func([xb]),axis=0)
@@ -456,10 +478,11 @@ class RegressionModel(AbstractModel):
                     Kz=activ
 
 
-                L=Kz/float(self.bs)
+                L=Kz
                 if(L>K_max):
                     K_max=L
-
+            
+            K_max = K_max/(self.bs * self.y_train.shape[1])
             K_prime = 0.0
             if(epoch == 0):
                 K_prime = K_max 
@@ -481,7 +504,7 @@ class RegressionModel(AbstractModel):
         Plots Kz
         :return: None
         """
-        with open("./tej_tests/CaliforniaHousing/method_26/random_state_42/K_values","a") as fp:
+        with open(base_path+"K_values","a") as fp:
             fp.write("K_z\n")
             for i in self.K_z:
                 fp.write(str(i)+"\n")
@@ -489,7 +512,7 @@ class RegressionModel(AbstractModel):
         plt.xlabel("Iteration")
         plt.ylabel("K_z")
         plt.title("K_z over time")
-        plt.savefig("./tej_tests/CaliforniaHousing/method_26/random_state_42/K_values.png")
+        plt.savefig(base_path+"K_values.png")
 
     # def calculate_loss(self,x:np.ndarray,y:np.ndarray):
     #     """
