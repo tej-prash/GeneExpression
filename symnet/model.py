@@ -6,7 +6,7 @@ import os
 import matplotlib.pyplot as plt
 from keras.callbacks import LambdaCallback
 
-base_path="./tej_tests/GeneDataset/method_5/"
+base_path="./tej_tests/GeneDataset/method_40/"
 
 class AbstractModel:
     """
@@ -15,7 +15,7 @@ class AbstractModel:
 
     def __init__(self, path: str, n_classes: int = 2, activation='relu', task: str = 'classification',
                  bs: int = 64, train_size: float = 0.7, optimizer: str = 'sgd', epochs: int = 100,
-                 balance: bool = True):
+                 balance: bool = True,flag_type = "adaptive"):
         """
         Initializes a Model instance.
         :param path: Path to the CSV file
@@ -59,6 +59,7 @@ class AbstractModel:
         self.metrics = ['accuracy']
 
         self.x_train = self.x_test = self.y_train = self.y_test = None
+        self.flag_type=flag_type
 
     def _get_model(self):
         """
@@ -129,7 +130,13 @@ class AbstractModel:
         self.model = self._get_model()
 
         lr_scheduler = LearningRateScheduler(self._lr_schedule)
-        csv_logger=CSVLogger(filename=base_path+'training_adaptive.log',append='True')
+
+        if(self.flag_type == "adaptive"):
+            csv_logger=CSVLogger(filename=base_path+'adaptive/trial_1/training_adaptive.log',append='True')
+        else:
+            _,lr=self.flag_type.split(";")
+            csv_logger=CSVLogger(filename=base_path+'constant/'+  'trial_' + lr + '/training_constant.log',append='True')
+        
         individual_record_callback=LambdaCallback(on_epoch_end=self.record_output)
 
         # Prepare callbacks for model saving and for learning rate adjustment.
@@ -155,12 +162,22 @@ class AbstractModel:
         # Save model 
 
         # Save model weights
-        self.model.save_weights(base_path+"adaptive/trial_1/model_weights.h5")
+        if(self.flag_type == "adaptive"):
+            self.model.save_weights(base_path+"adaptive/trial_1/model_weights.h5")
 
-        # Save model architecture as json
-        model_json = self.model.to_json()
-        with open(base_path+"adaptive/trial_1/model.json","w") as json_file:
-            json_file.write(model_json)
+            # Save model architecture as json
+            model_json = self.model.to_json()
+            with open(base_path+"adaptive/trial_1/model.json","w") as json_file:
+                json_file.write(model_json)
+        else:
+            _,lr=self.flag_type.split(";")
+
+            self.model.save_weights(base_path+"constant/trial_" + lr + "/model_weights.h5")
+
+            # Save model architecture as json
+            model_json = self.model.to_json()
+            with open(base_path+"constant/trial_"+ lr + "/model.json","w") as json_file:
+                json_file.write(model_json)
 
     def predict(self, x: np.ndarray):
         """

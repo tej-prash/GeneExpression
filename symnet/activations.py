@@ -89,7 +89,7 @@ class CustomActivation(Layer):
         elif name == 'sbaf':
             self.activation = SBAF()
         elif name == 'arelu':
-            self.activation = ARelu()
+            self.activation = ARelu(k=0.6,n=1.01)
         super(CustomActivation, self).__init__(**kwargs)
 
     def call(self, x, **kwargs):

@@ -16,8 +16,9 @@ from keras.utils.vis_utils import plot_model
 import seaborn as sns
 import matplotlib.pyplot as plt
 from keras.constraints import NonNeg
+from keras import regularizers
 
-base_path="./tej_tests/GeneDataset/method_5/"
+base_path="./tej_tests/GeneDataset/method_40/"
 
 class RegressionModel(AbstractModel):
     """
@@ -25,7 +26,7 @@ class RegressionModel(AbstractModel):
     """
     def __init__(self, path: str, n_classes: int = 0, activation='relu', task: str = 'regression',
                  bs: int = 64, train_size: float = 0.7, optimizer: str = 'sgd', epochs: int = 100,
-                 balance: bool = True,label_column:str=None,header:int=0,f_type='csv'):
+                 balance: bool = True,label_column:str=None,header:int=0,f_type='csv',flag_type = "adaptive"):
         """
         Initializes a RegressionModel instance.
         :param path: Path to the CSV file
@@ -88,6 +89,7 @@ class RegressionModel(AbstractModel):
 
         self.x_train = self.x_test = self.y_train = self.y_test = None
         self.label_column = label_column
+        self.flag_type=flag_type
 
         self.x_train, self.x_test, self.y_train, self.y_test = \
             read_data(path, label_column, header, balance=self.balance, train_size=self.train_size,categorize=False,file_type=self.file_type) 
@@ -124,27 +126,33 @@ class RegressionModel(AbstractModel):
         # gu=glorot_uniform(seed=54)
 
         # x = Input(shape=(self.x_train.shape[1],))
-        # hidden_out_1=Dense(20)(x)
-        # act_1 = CustomActivation(self.activation)(hidden_out_1)
-        # hidden_out_2=Dense(15)(act_1)
-        # act_2 = CustomActivation(self.activation)(hidden_out_2)
-        # y=Dense(1,activation='softsign')(act_2)
+
+        # hidden_out_1=Dense(1000)(x)
+        # act_1 = CustomActivation('arelu')(hidden_out_1)
+        # dropout_1=Dropout(0.1)(act_1)
+
+        # hidden_out_2=Dense(1000)(dropout_1)
+        # act_2 = CustomActivation('arelu')(hidden_out_2)
+        # dropout_2=Dropout(0.1)(act_2)
+
+        # y=Dense(self.y_train.shape[1],activation='softsign')(dropout_2)
 
         x = Input(shape=(self.x_train.shape[1],))
 
-        hidden_out_1=Dense(1000,activation='tanh')(x)
-        act_out_1=Dropout(0.1)(hidden_out_1)
+        hidden_out_1=Dense(300,activation='tanh')(x)
+        dropout_1=Dropout(0.1)(hidden_out_1)
 
-        hidden_out_2=Dense(1000,activation='tanh')(act_out_1)
-        act_out_2=Dropout(0.1)(hidden_out_2)
+        hidden_out_2=Dense(300,activation='tanh')(dropout_1)
+        dropout_2=Dropout(0.1)(hidden_out_2)
 
-        y=Dense(self.y_train.shape[1],activation='softsign')(act_out_2)
+        y=Dense(self.y_train.shape[1],activation='softsign')(dropout_2)
 
         self.model = Model(inputs=x,outputs=y)
 
         # plot_model(self.model,to_file="./tej_tests/BostonHousing/model_img_2.png",show_shapes=True,show_layer_names=True)
 
-        # self.model.load_weights(base_path+'model_adaptive.h5') 
+        if(self.flag_type!='adaptive'):
+            self.model.load_weights(base_path+'adaptive/trial_1/model_adaptive.h5') 
 
         return self.model
 
@@ -241,7 +249,14 @@ class RegressionModel(AbstractModel):
         activ_mean_test=np.mean(activ[0],axis=0)
         y_mean_test = np.mean(y,axis=0)
         
-        with open(base_path+"output_record_adaptive","a") as fp:
+        f_name=''
+        if(self.flag_type == "adaptive"):
+            f_name="adaptive/trial_1/output_record_adaptive"
+        else:
+            _,lr=self.flag_type.split(";")
+            f_name="constant/trial_" + str(lr) +"/output_record_constant"
+
+        with open(base_path+f_name,"a") as fp:
             # Epoch,Predicted_train,y_train,predicted_test,y_test
             fp.write(str(epoch)+",")
             print(activ_mean_train.shape,activ_mean_test.shape,y_mean_train.shape,y_mean_test.shape)
@@ -261,10 +276,10 @@ class RegressionModel(AbstractModel):
         """
         initial_LR = 5 * (1e-4)
         if(epoch==0):
-            self.model.save_weights(base_path+"model_constant.h5")
+            self.model.save_weights(base_path+"constant/trial_1/model_constant.h5")
             self.lr_history.append(initial_LR)
             return self.lr_history[-1]
-        lr = self.lr_history[-1] * 0.9
+        lr = self.lr_history[-1] * decay_factor
         if (lr < 1e-5):
             lr = 1e-5
         self.lr_history.append(lr)
@@ -284,15 +299,23 @@ class RegressionModel(AbstractModel):
 
         if(self.optimizer_name == 'sgd'):
             #Verify model weights
-            if(epoch==0):
-                self.model.save_weights(base_path+"model_adaptive.h5")
+            if(self.flag_type == "adaptive"):
+                if(epoch==0):
+                    self.model.save_weights(base_path+"adaptive/trial_1/model_adaptive.h5")
+            
+            else:
+                _,lr=self.flag_type.split(";")
+                if(epoch == 0):
+                    self.model.save_weights(base_path+"constant/trial_" + lr +  "/model_constant.h5")
+                    print(lr)   
+                return float(lr)
 
             # constant LR with decay
             # return self.constant_LR_decay(epoch,0.9)
             # if(epoch==0):
-            #     self.model.save_weights("./tej_tests/CaliforniaHousing/method_31/random_state_42/model_constant.h5")
+            #     self.model.save_weights(base_path+"constant/trial_1/model_constant.h5")
 
-            # return 1 * (1e-5)
+            # return 10.0
 
             if(len(self.model.layers)!=2):
                 penultimate_activ_func = K.function([self.model.layers[0].input], [self.model.layers[-2].output])
@@ -308,7 +331,7 @@ class RegressionModel(AbstractModel):
             #grads_func=K.function(inputs,grads)
 
             #Maximum Lipschitz constant
-            K_max=-100000.0
+            K_max=-1.0
             for i in range(((len(self.x_train) - 1) // self.bs + 1)):
                 start_i=i*self.bs
                 end_i=start_i+self.bs
@@ -348,13 +371,13 @@ class RegressionModel(AbstractModel):
                     K_max=L
 
             # penul_output=z_activ_func([self.x_train[64:128]])
-            # output=activ_func([self.x_train[:64]])
-            # print("Output is",output)
+            # penul_output=penultimate_activ_func([self.x_train[:64]])
+            # print("Output is",penul_output)
             # print("Label is",self.y_train[:64])
             # print("Z is ",penul_output)
             K_max = K_max/(self.bs * self.y_train.shape[1])
             lr=float(1/K_max)
-            # lr = lr / 4000.0
+            # lr = lr * 0.1
             print("Kmax",K_max)
             print("Learning Rate new:",lr)
 
@@ -371,8 +394,9 @@ class RegressionModel(AbstractModel):
 
             #Verify model weights
             if(epoch==0):
-                self.model.save_weights(path+"/model_adaptive.h5")
+                self.model.save_weights(base_path+"constant/trial_1/model_constant.h5")
 
+            return 1e-3
 
             # if(epoch==0):
             #     self.model.save_weights(path+"/model_constant.h5")
@@ -440,9 +464,11 @@ class RegressionModel(AbstractModel):
 
         elif(self.optimizer_name == 'AdaMo'):
             #Verify model weights
-            if(epoch==0):
-                self.model.save_weights(base_path+"model_adaptive.h5")
+            # if(epoch==0):
+            #     self.model.save_weights(base_path+"adaptive/trial_1/model_adaptive.h5")
+            # constant LR with decay
             print("In AdaMo!")
+            return self.constant_LR_decay(epoch,0.9)
 
             # if(epoch==0):
             #     self.model.save_weights(base_path+"model_constant.h5")
@@ -487,7 +513,7 @@ class RegressionModel(AbstractModel):
             if(epoch == 0):
                 K_prime = K_max 
             else:
-                K_prime = (self.beta * self.K_z[-1]) + (1 - self.beta)*(K_max)
+                K_prime = (self.beta * self.K_z[-1]) + ((1 - self.beta)*(K_max))
 
             lr=float(1/K_prime)
             print("Kprime",K_prime)
@@ -504,7 +530,7 @@ class RegressionModel(AbstractModel):
         Plots Kz
         :return: None
         """
-        with open(base_path+"K_values","a") as fp:
+        with open(base_path+"adaptive/trial_1/K_values","a") as fp:
             fp.write("K_z\n")
             for i in self.K_z:
                 fp.write(str(i)+"\n")
@@ -512,7 +538,7 @@ class RegressionModel(AbstractModel):
         plt.xlabel("Iteration")
         plt.ylabel("K_z")
         plt.title("K_z over time")
-        plt.savefig(base_path+"K_values.png")
+        plt.savefig(base_path+"adaptive/trial_1/K_values.png")
 
     # def calculate_loss(self,x:np.ndarray,y:np.ndarray):
     #     """

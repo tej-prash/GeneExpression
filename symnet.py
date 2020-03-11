@@ -20,7 +20,8 @@ parser.add_argument('--train-split', type=float, default=0.7, help='Split to use
 parser.add_argument('--epochs', type=int, default=100, help='Number of epochs')
 parser.add_argument('--no-balance', action='store_true', help='Do not rebalance classes')
 parser.add_argument('--no-augment', action='store_true', help='Do not augment data for image datasets')
-parser.add_argument('--file-type',type=str,help='Type of file to process(binary/csv)',default='csv')
+parser.add_argument('--filet',type=str,help='Type of file to process(binary/csv)',default='csv')
+parser.add_argument('--flag-type', type=str, required=True, help='Type of flag(adaptive/constant;LR)')
 
 def main():
     #Fix weights
@@ -37,10 +38,11 @@ def main():
     n_epochs = args.epochs
     balance = not args.no_balance
     augment = not args.no_augment
+    flag_type = args.flag_type
 
     if task=='regression':
         model=RegressionModel(args.dataset, n_classes=num_classes, label_column=labels, task=task, header=has_header,
-                             activation=activation, bs=bs, train_size=train_split, epochs=n_epochs, balance=False,optimizer='sgd',f_type=args.file_type)
+                             activation=activation, bs=bs, train_size=train_split, epochs=n_epochs, balance=False,optimizer='sgd',f_type=args.filet,flag_type=flag_type)
 
     elif args.data_type == 'numeric':
         model = NumericModel(args.dataset, n_classes=num_classes, label_column=labels, task=task, header=has_header,
@@ -53,7 +55,8 @@ def main():
     model.fit()
     loss, accuracy = model.score()
     print('Loss =', loss, '\nAccuracy =', accuracy)
-    model.plot_Kz()
+    if(flag_type == "adaptive"):
+        model.plot_Kz()
     #Predict model
     # loss=model.calculate_loss(model.x_test,model.y_test)
     # print('Loss =', loss)

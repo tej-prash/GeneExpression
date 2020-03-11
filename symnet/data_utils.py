@@ -61,7 +61,7 @@ def read_data(path: str, label_column: str = None, header: int = 0, balance: boo
         print('WARNING: Path does not exist, or is None.')
         return [[]], []
         
-    if(file_type=='binary'):
+    if(file_type=='b'):
         print("Reading a binary file")
         # Read a npy file 
         x_train_path,y_train_path,x_val_path,y_val_path=tuple(path.split(","))
