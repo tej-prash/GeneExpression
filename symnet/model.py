@@ -1,12 +1,34 @@
-from keras.callbacks import LearningRateScheduler, ModelCheckpoint,CSVLogger
+from keras.callbacks import LearningRateScheduler, ModelCheckpoint,CSVLogger, TensorBoard, Callback
 from keras.optimizers import SGD
 from keras import backend as K
 import numpy as np
 import os
+import time
 import matplotlib.pyplot as plt
 from keras.callbacks import LambdaCallback
 
-base_path="./tej_tests/GeneDataset/method_40/"
+base_path="./tej_tests/GeneDataset/keras_2.3.0/method_18/"
+
+
+class WeightsSaver(Callback):
+    def __init__(self, N):
+        self.N = N
+        self.batch = 1
+
+    def on_batch_end(self, batch, logs={}):
+        if self.batch % self.N == 0:
+            name = 'weights%08d.h5' % self.batch
+            save_dir = os.path.join(base_path+"adaptive/trial_2/", 'saved_models')
+            self.model.save_weights(os.path.join(save_dir,name))
+        self.batch += 1
+
+class TimeHistory(Callback):
+    def on_train_begin(self,logs={}):
+        self.time_history=[]
+    def on_epoch_begin(self,epoch,logs={}):
+        self.epoch_start_time=time.time()
+    def on_epoch_end(self,epoch,logs={}):
+        self.time_history.append(time.time() - self.epoch_start_time)
 
 class AbstractModel:
     """
@@ -54,6 +76,7 @@ class AbstractModel:
 
         self.lr_history = []
         self.model = None
+        self.lr_time=[]
 
         self.loss = 'categorical_crossentropy'
         self.metrics = ['accuracy']
@@ -133,32 +156,45 @@ class AbstractModel:
 
         if(self.flag_type == "adaptive"):
             csv_logger=CSVLogger(filename=base_path+'adaptive/trial_1/training_adaptive.log',append='True')
+            tensorboard_callback = TensorBoard(log_dir=base_path+'adaptive/trial_1/graphs/')
+
         else:
             _,lr=self.flag_type.split(";")
             csv_logger=CSVLogger(filename=base_path+'constant/'+  'trial_' + lr + '/training_constant.log',append='True')
+            tensorboard_callback = TensorBoard(log_dir=base_path+'constant/'+  'trial_' + lr +'/graphs/')
+
+        # individual_record_callback=LambdaCallback(on_epoch_end=self.record_output)
         
-        individual_record_callback=LambdaCallback(on_epoch_end=self.record_output)
+
+        # weight_saver_callback = WeightsSaver(1)
 
         # Prepare callbacks for model saving and for learning rate adjustment.
-        save_dir = os.path.join(os.getcwd(), 'saved_models')
-        model_name = 'model.{epoch:03d}.h5'
+        # save_dir = os.path.join(base_path+"adaptive/trial_1/", 'saved_models')
+        # model_name = 'model.{epoch:03d}.h5'
 
-        # Prepare model model saving directory.
-        if not os.path.isdir(save_dir):
-            os.makedirs(save_dir)
+        # # Prepare model model saving directory.
+        # if not os.path.isdir(save_dir):
+        #     os.makedirs(save_dir)
 
-        filepath = os.path.join(save_dir, model_name)
-        checkpoint = ModelCheckpoint(filepath=filepath,
-                                     monitor='val_acc',
-                                     verbose=1,
-                                     save_best_only=True)
+        # filepath = os.path.join(save_dir, model_name)
+        # checkpoint = ModelCheckpoint(filepath=filepath,
+        #                              monitor='loss',
+        #                              verbose=1,
+        #                              save_best_only=False,mode='max',save_weights_only=True)
+
+
+
         print("self.optimizer",self.optimizer)
         self.model.compile(self.optimizer, loss=self.loss, metrics=self.metrics)
 
         if finish_fit:
+            time_callback = TimeHistory()
             self.model.fit(self.x_train, self.y_train, validation_data=(self.x_test, self.y_test), epochs=self.epochs,
-                           batch_size=self.bs, shuffle=True, callbacks=[lr_scheduler, checkpoint,csv_logger,individual_record_callback])
-
+                           batch_size=self.bs, shuffle=True, callbacks=[lr_scheduler,csv_logger,tensorboard_callback,time_callback])
+            string_to_dump=""
+            # string_to_dump="Epoch,Time taken"+"\n"
+            for i in range(len(time_callback.time_history)):
+                string_to_dump += str(i)+","+str(time_callback.time_history[i] + self.lr_time[i])+"\n"
         # Save model 
 
         # Save model weights
@@ -169,6 +205,9 @@ class AbstractModel:
             model_json = self.model.to_json()
             with open(base_path+"adaptive/trial_1/model.json","w") as json_file:
                 json_file.write(model_json)
+
+            with open(base_path+"adaptive/trial_1/epoch_times_adaptive.log","a") as fp:
+                fp.write(string_to_dump)
         else:
             _,lr=self.flag_type.split(";")
 
@@ -178,6 +217,9 @@ class AbstractModel:
             model_json = self.model.to_json()
             with open(base_path+"constant/trial_"+ lr + "/model.json","w") as json_file:
                 json_file.write(model_json)
+            
+            with open(base_path+"constant/trial_"+ lr + "/epoch_times.log","a") as fp:
+                    fp.write(string_to_dump)
 
     def predict(self, x: np.ndarray):
         """

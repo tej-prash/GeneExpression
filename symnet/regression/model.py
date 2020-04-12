@@ -2,7 +2,7 @@ from symnet.data_utils import read_data,normalize,normalize_fit
 from keras.models import Model,model_from_json
 from symnet import AbstractModel, CustomActivation
 from symnet.activations import ARelu,SBAF
-from keras.callbacks import LearningRateScheduler, LambdaCallback
+from keras.callbacks import LearningRateScheduler, LambdaCallback , TensorBoard
 from keras.optimizers import SGD,Adam
 from keras.layers import Dense, Input, Dropout, Concatenate,BatchNormalization,LeakyReLU
 import os
@@ -17,8 +17,11 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from keras.constraints import NonNeg
 from keras import regularizers
+from keras.layers import Activation
+from keras.activations import relu
+import time
 
-base_path="./tej_tests/GeneDataset/method_40/"
+base_path="./tej_tests/GeneDataset/keras_2.3.0/method_18/"
 
 class RegressionModel(AbstractModel):
     """
@@ -83,6 +86,7 @@ class RegressionModel(AbstractModel):
         self.lr_history = []
         self.K_z=[]
         self.model = None
+        self.lr_time=[] 
 
         self.loss = 'mean_absolute_error'
         self.metrics = ['mean_absolute_error']
@@ -139,17 +143,30 @@ class RegressionModel(AbstractModel):
 
         x = Input(shape=(self.x_train.shape[1],))
 
-        hidden_out_1=Dense(300,activation='tanh')(x)
-        dropout_1=Dropout(0.1)(hidden_out_1)
+        hidden_out_1 = Dense(2000)(x)
+        act_1 = Activation('tanh')(hidden_out_1)
+        dropout_1 = Dropout(0.2)(act_1)
 
-        hidden_out_2=Dense(300,activation='tanh')(dropout_1)
-        dropout_2=Dropout(0.1)(hidden_out_2)
+        # hidden_out_1=Dense(1000)(x)
+        # bn_1 = BatchNormalization()(hidden_out_1)
+        # act_1 = Activation(lambda x:relu(x,alpha=0.1,max_value=3.5))(bn_1)
+        # dropout_1=Dropout(0.1)(act_1)
 
-        y=Dense(self.y_train.shape[1],activation='softsign')(dropout_2)
+        # hidden_out_2=Dense(2000)(dropout_1)
+        # bn_2 = BatchNormalization()(hidden_out_2)
+        # act_2 = Activation(lambda x:relu(x,alpha=0.1,max_value=3.5))(bn_2)
+        # dropout_2=Dropout(0.1)(act_2)
+
+        # hidden_out_3=Dense(1000)(dropout_2)
+        # bn_3 = BatchNormalization()(hidden_out_3)
+        # act_3 = Activation(lambda x:relu(x,alpha=0.1,max_value=3.5))(bn_3)
+        # dropout_3=Dropout(0.1)(act_3)
+
+        y=Dense(self.y_train.shape[1],activation='softsign')(dropout_1)
 
         self.model = Model(inputs=x,outputs=y)
 
-        # plot_model(self.model,to_file="./tej_tests/BostonHousing/model_img_2.png",show_shapes=True,show_layer_names=True)
+        plot_model(self.model,to_file=base_path+"model_img.png",show_shapes=True,show_layer_names=True)
 
         if(self.flag_type!='adaptive'):
             self.model.load_weights(base_path+'adaptive/trial_1/model_adaptive.h5') 
@@ -296,6 +313,8 @@ class RegressionModel(AbstractModel):
 
         if self.x_train is None:
             raise ValueError('x_train is None')
+        
+        self.start_lr_time=time.time()
 
         if(self.optimizer_name == 'sgd'):
             #Verify model weights
@@ -308,6 +327,8 @@ class RegressionModel(AbstractModel):
                 if(epoch == 0):
                     self.model.save_weights(base_path+"constant/trial_" + lr +  "/model_constant.h5")
                     print(lr)   
+                self.end_lr_time=time.time()
+                self.lr_time.append(self.end_lr_time - self.start_lr_time)
                 return float(lr)
 
             # constant LR with decay
@@ -377,7 +398,11 @@ class RegressionModel(AbstractModel):
             # print("Z is ",penul_output)
             K_max = K_max/(self.bs * self.y_train.shape[1])
             lr=float(1/K_max)
-            # lr = lr * 0.1
+            # if(epoch == 0):
+            #     lr = lr * 1e-3
+            lr = lr * 0.01
+            self.end_lr_time=time.time()
+            self.lr_time.append(self.end_lr_time - self.start_lr_time)
             print("Kmax",K_max)
             print("Learning Rate new:",lr)
 
