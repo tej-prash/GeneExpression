@@ -3,7 +3,7 @@ from keras.models import Model,model_from_json
 from symnet import AbstractModel, CustomActivation
 from symnet.activations import ARelu,SBAF
 from keras.callbacks import LearningRateScheduler, LambdaCallback , TensorBoard
-from keras.optimizers import SGD,Adam
+from keras.optimizers import SGD,Adam,Adadelta
 from keras.layers import Dense, Input, Dropout, Concatenate,BatchNormalization,LeakyReLU
 import os
 from keras import backend as K
@@ -19,9 +19,10 @@ from keras.constraints import NonNeg
 from keras import regularizers
 from keras.layers import Activation
 from keras.activations import relu
+# from mlsquare.losses.keras import quantile_loss
 import time
 
-base_path="./tej_tests/GeneDataset/keras_2.3.0/method_18/"
+base_path="./tej_tests/GeneDataset/keras_2.3.0/method_19/"
 
 class RegressionModel(AbstractModel):
     """
@@ -65,6 +66,9 @@ class RegressionModel(AbstractModel):
             self.optimizer = SGD(momentum=self.beta)
             self.optimizer_name = 'AdaMo'
             print("Beta",self.beta)
+        elif optimizer == 'AdaDelta':
+            self.optimizer=Adadelta(learning_rate=1.0)
+            self.optimizer_name='AdaDelta'
         else:
             raise NotImplementedError('Only SGD optimizer is implemented!')
         if bs < 1 or not isinstance(bs, int):
@@ -143,9 +147,13 @@ class RegressionModel(AbstractModel):
 
         x = Input(shape=(self.x_train.shape[1],))
 
-        hidden_out_1 = Dense(2000)(x)
+        hidden_out_1 = Dense(3000)(x)
         act_1 = Activation('tanh')(hidden_out_1)
-        dropout_1 = Dropout(0.2)(act_1)
+        dropout_1 = Dropout(0.1)(act_1)
+
+        hidden_out_2 = Dense(3000)(dropout_1)
+        act_2 = Activation('tanh')(hidden_out_2)
+        dropout_2 = Dropout(0.1)(act_2)
 
         # hidden_out_1=Dense(1000)(x)
         # bn_1 = BatchNormalization()(hidden_out_1)
@@ -162,14 +170,14 @@ class RegressionModel(AbstractModel):
         # act_3 = Activation(lambda x:relu(x,alpha=0.1,max_value=3.5))(bn_3)
         # dropout_3=Dropout(0.1)(act_3)
 
-        y=Dense(self.y_train.shape[1],activation='softsign')(dropout_1)
+        y=Dense(self.y_train.shape[1],activation='softsign')(dropout_2)
 
         self.model = Model(inputs=x,outputs=y)
 
         plot_model(self.model,to_file=base_path+"model_img.png",show_shapes=True,show_layer_names=True)
 
         if(self.flag_type!='adaptive'):
-            self.model.load_weights(base_path+'adaptive/trial_1/model_adaptive.h5') 
+            self.model.load_weights(base_path+"constant/trial_0.1/saved_models/model_best.h5")
 
         return self.model
 
@@ -320,12 +328,12 @@ class RegressionModel(AbstractModel):
             #Verify model weights
             if(self.flag_type == "adaptive"):
                 if(epoch==0):
-                    self.model.save_weights(base_path+"adaptive/trial_1/model_adaptive.h5")
+                    self.model.save_weights(base_path+"adaptive/trial_2/model_adaptive.h5")
             
             else:
                 _,lr=self.flag_type.split(";")
                 if(epoch == 0):
-                    self.model.save_weights(base_path+"constant/trial_" + lr +  "/model_constant.h5")
+                    # self.model.save_weights(base_path+"constant/trial_" + lr +  "/model_constant.h5")
                     print(lr)   
                 self.end_lr_time=time.time()
                 self.lr_time.append(self.end_lr_time - self.start_lr_time)
@@ -549,13 +557,22 @@ class RegressionModel(AbstractModel):
 
             return lr
 
+        elif(self.optimizer_name == 'AdaDelta'):
+            if(self.flag_type!='adaptive'):
+                 _,lr=self.flag_type.split(";")
+                 if(epoch == 0):
+                     self.model.save_weights(base_path+"constant/trial_" + lr +  "/model_constant.h5")
+                     print(lr)   
+                 self.end_lr_time=time.time()
+                 self.lr_time.append(self.end_lr_time - self.start_lr_time)
+                 return float(lr)
 
     def plot_Kz(self):
         """
         Plots Kz
         :return: None
         """
-        with open(base_path+"adaptive/trial_1/K_values","a") as fp:
+        with open(base_path+"adaptive/trial_2/K_values","a") as fp:
             fp.write("K_z\n")
             for i in self.K_z:
                 fp.write(str(i)+"\n")
@@ -563,7 +580,7 @@ class RegressionModel(AbstractModel):
         plt.xlabel("Iteration")
         plt.ylabel("K_z")
         plt.title("K_z over time")
-        plt.savefig(base_path+"adaptive/trial_1/K_values.png")
+        plt.savefig(base_path+"adaptive/trial_2/K_values.png")
 
     # def calculate_loss(self,x:np.ndarray,y:np.ndarray):
     #     """

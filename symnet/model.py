@@ -7,7 +7,7 @@ import time
 import matplotlib.pyplot as plt
 from keras.callbacks import LambdaCallback
 
-base_path="./tej_tests/GeneDataset/keras_2.3.0/method_18/"
+base_path="./tej_tests/GeneDataset/keras_2.3.0/method_19/"
 
 
 class WeightsSaver(Callback):
@@ -155,13 +155,17 @@ class AbstractModel:
         lr_scheduler = LearningRateScheduler(self._lr_schedule)
 
         if(self.flag_type == "adaptive"):
-            csv_logger=CSVLogger(filename=base_path+'adaptive/trial_1/training_adaptive.log',append='True')
-            tensorboard_callback = TensorBoard(log_dir=base_path+'adaptive/trial_1/graphs/')
+            csv_logger=CSVLogger(filename=base_path+'adaptive/trial_2/training_adaptive.log',append='True')
+            # tensorboard_callback = TensorBoard(log_dir=base_path+'adaptive/trial_1/graphs/',write_grads=True,histogram_freq=1,write_graph=True)
+            save_dir = os.path.join(base_path+"adaptive/trial_2/", 'saved_models')
 
         else:
             _,lr=self.flag_type.split(";")
             csv_logger=CSVLogger(filename=base_path+'constant/'+  'trial_' + lr + '/training_constant.log',append='True')
-            tensorboard_callback = TensorBoard(log_dir=base_path+'constant/'+  'trial_' + lr +'/graphs/')
+            # csv_logger=CSVLogger(filename=base_path+'constant/trial_3/training_constant.log',append='True')
+            # tensorboard_callback = TensorBoard(log_dir=base_path+'constant/'+  'trial_' + lr +'/graphs/')
+            save_dir = os.path.join(base_path+'constant/'+  'trial_' + lr , 'saved_models')
+            # save_dir = os.path.join(base_path+'constant/trial_3/' , 'saved_models')
 
         # individual_record_callback=LambdaCallback(on_epoch_end=self.record_output)
         
@@ -169,56 +173,60 @@ class AbstractModel:
         # weight_saver_callback = WeightsSaver(1)
 
         # Prepare callbacks for model saving and for learning rate adjustment.
-        # save_dir = os.path.join(base_path+"adaptive/trial_1/", 'saved_models')
-        # model_name = 'model.{epoch:03d}.h5'
+        model_name = 'model_best.h5'
 
         # # Prepare model model saving directory.
-        # if not os.path.isdir(save_dir):
-        #     os.makedirs(save_dir)
+        if not os.path.isdir(save_dir):
+            os.makedirs(save_dir)
 
-        # filepath = os.path.join(save_dir, model_name)
-        # checkpoint = ModelCheckpoint(filepath=filepath,
-        #                              monitor='loss',
-        #                              verbose=1,
-        #                              save_best_only=False,mode='max',save_weights_only=True)
+        filepath = os.path.join(save_dir, model_name)
+        checkpoint = ModelCheckpoint(filepath=filepath,
+                                     monitor='loss',
+                                     verbose=1,
+                                     save_best_only=True,save_weights_only=True)
 
 
 
-        print("self.optimizer",self.optimizer)
+        print("self.optimizer",self.optimizer,self.loss)
         self.model.compile(self.optimizer, loss=self.loss, metrics=self.metrics)
 
         if finish_fit:
             time_callback = TimeHistory()
             self.model.fit(self.x_train, self.y_train, validation_data=(self.x_test, self.y_test), epochs=self.epochs,
-                           batch_size=self.bs, shuffle=True, callbacks=[lr_scheduler,csv_logger,tensorboard_callback,time_callback])
+                           batch_size=self.bs, shuffle=True, callbacks=[lr_scheduler,csv_logger,time_callback,checkpoint])
             string_to_dump=""
             # string_to_dump="Epoch,Time taken"+"\n"
             for i in range(len(time_callback.time_history)):
                 string_to_dump += str(i)+","+str(time_callback.time_history[i] + self.lr_time[i])+"\n"
+                # string_to_dump += str(i)+","+str(time_callback.time_history[i] + self)+"\n"
+
         # Save model 
 
         # Save model weights
         if(self.flag_type == "adaptive"):
-            self.model.save_weights(base_path+"adaptive/trial_1/model_weights.h5")
+            self.model.save_weights(base_path+"adaptive/trial_2/model_weights.h5")
 
             # Save model architecture as json
             model_json = self.model.to_json()
-            with open(base_path+"adaptive/trial_1/model.json","w") as json_file:
+            with open(base_path+"adaptive/trial_2/model.json","w") as json_file:
                 json_file.write(model_json)
 
-            with open(base_path+"adaptive/trial_1/epoch_times_adaptive.log","a") as fp:
+            with open(base_path+"adaptive/trial_2/epoch_times_adaptive.log","a") as fp:
                 fp.write(string_to_dump)
         else:
             _,lr=self.flag_type.split(";")
 
             self.model.save_weights(base_path+"constant/trial_" + lr + "/model_weights.h5")
+            # self.model.save_weights(base_path+"constant/trial_3/model_weights.h5")
 
             # Save model architecture as json
             model_json = self.model.to_json()
             with open(base_path+"constant/trial_"+ lr + "/model.json","w") as json_file:
+            # with open(base_path+"constant/trial_3/model.json","w") as json_file:
                 json_file.write(model_json)
             
             with open(base_path+"constant/trial_"+ lr + "/epoch_times.log","a") as fp:
+            # with open(base_path+"constant/trial_3/epoch_times.log","a") as fp:
                     fp.write(string_to_dump)
 
     def predict(self, x: np.ndarray):
