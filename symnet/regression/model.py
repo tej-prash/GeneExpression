@@ -22,7 +22,7 @@ from keras.activations import relu
 # from mlsquare.losses.keras import quantile_loss
 import time
 
-base_path="./tej_tests/GeneDataset/keras_2.3.0/method_19/"
+base_path="./tej_tests/GeneDataset/keras_2.3.0/method_19/X2/"
 
 class RegressionModel(AbstractModel):
     """
@@ -56,11 +56,11 @@ class RegressionModel(AbstractModel):
         elif optimizer == 'Adam':
             self.optimizer=Adam()
             self.optimizer_name = 'Adam'
-            self.K_1=[]
-            self.K_2=[]
-            self.beta_1=0.7
-            self.beta_2=0.9
-            self.epsilon=1e-8
+            # self.K_1=[]
+            # self.K_2=[]
+            # self.beta_1=0.7
+            # self.beta_2=0.9
+            # self.epsilon=1e-8
         elif optimizer == 'AdaMo':
             self.beta = 0.5
             self.optimizer = SGD(momentum=self.beta)
@@ -155,7 +155,7 @@ class RegressionModel(AbstractModel):
         act_2 = Activation('tanh')(hidden_out_2)
         dropout_2 = Dropout(0.1)(act_2)
 
-        # hidden_out_1=Dense(1000)(x)
+        # hidden_out_1=Dense(2000)(x)
         # bn_1 = BatchNormalization()(hidden_out_1)
         # act_1 = Activation(lambda x:relu(x,alpha=0.1,max_value=3.5))(bn_1)
         # dropout_1=Dropout(0.1)(act_1)
@@ -177,7 +177,7 @@ class RegressionModel(AbstractModel):
         plot_model(self.model,to_file=base_path+"model_img.png",show_shapes=True,show_layer_names=True)
 
         if(self.flag_type!='adaptive'):
-            self.model.load_weights(base_path+"constant/trial_0.1/saved_models/model_best.h5")
+            self.model.load_weights(base_path+"constant/trial_0.1/model_weights.h5")
 
         return self.model
 
@@ -328,7 +328,7 @@ class RegressionModel(AbstractModel):
             #Verify model weights
             if(self.flag_type == "adaptive"):
                 if(epoch==0):
-                    self.model.save_weights(base_path+"adaptive/trial_2/model_adaptive.h5")
+                    self.model.save_weights(base_path+"adaptive/trial_3/model_adaptive.h5")
             
             else:
                 _,lr=self.flag_type.split(";")
