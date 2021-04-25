@@ -34,15 +34,7 @@ You can use the `symnet.py` file to run classification on a tabular dataset. The
 *  `--no-balance`: Do not rebalance classes in classification problems
 *  `--no-augment`: For image datasets, do not augment the data
 
-## Docker
-The Dockerfile in `symnet-docker` sets up a minimal Debian Stretch system with Python 3.7 and
-required packages installed. Run it with  
 
-    docker run -it -v [host-src:]/symnet symnet /bin/bash
-
-This starts up an interactive terminal, mounts a volume at `/symnet` in the container,
-and runs a Bash shell. You can change the command run in the
-last argument.
    
 ## Todo
 -  [ ]  Add DenseNet architecture
@@ -51,24 +43,3 @@ last argument.
 -  [ ]  Resize and normalize images
 -  [ ]  For images, use LipschitzLR scheduler
 
-## Cite our work
-SymNet uses the LipschitzLR learning rate policy: [arXiv:1902.07399](https://arxiv.org/abs/1902.07399)
-
-BibTeX entry:  
-
-    @article{yedida2019novel,
-      title={A novel adaptive learning rate scheduler for deep neural networks},
-      author={Yedida, Rahul and Saha, Snehanshu},
-      journal={arXiv preprint arXiv:1902.07399},
-      year={2019}
-    }
-
-SymNet also implements the SBAF and A-ReLU activation functions: [arXiv:1906.01975](https://arxiv.org/abs/1906.01975). 
-If you use these, please cite:  
-
-    @article{saha2019evolution,
-      title={Evolution of Novel Activation Functions in Neural Network Training with Applications to Classification of Exoplanets},
-      author={Saha, Snehanshu and Nagaraj, Nithin and Mathur, Archana and Yedida, Rahul},
-      journal={arXiv preprint arXiv:1906.01975},
-      year={2019}
-    }
