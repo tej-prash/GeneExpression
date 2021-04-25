@@ -1,10 +1,34 @@
-from keras.callbacks import LearningRateScheduler, ModelCheckpoint
+from keras.callbacks import LearningRateScheduler, ModelCheckpoint,CSVLogger, TensorBoard, Callback
 from keras.optimizers import SGD
 from keras import backend as K
 import numpy as np
 import os
+import time
 import matplotlib.pyplot as plt
+from keras.callbacks import LambdaCallback
 
+base_path="./tej_tests/GeneDataset/keras_2.3.0/method_19/X2/"
+
+
+class WeightsSaver(Callback):
+    def __init__(self, N):
+        self.N = N
+        self.batch = 1
+
+    def on_batch_end(self, batch, logs={}):
+        if self.batch % self.N == 0:
+            name = 'weights%08d.h5' % self.batch
+            save_dir = os.path.join(base_path+"adaptive/trial_2/", 'saved_models')
+            self.model.save_weights(os.path.join(save_dir,name))
+        self.batch += 1
+
+class TimeHistory(Callback):
+    def on_train_begin(self,logs={}):
+        self.time_history=[]
+    def on_epoch_begin(self,epoch,logs={}):
+        self.epoch_start_time=time.time()
+    def on_epoch_end(self,epoch,logs={}):
+        self.time_history.append(time.time() - self.epoch_start_time)
 
 class AbstractModel:
     """
@@ -13,7 +37,7 @@ class AbstractModel:
 
     def __init__(self, path: str, n_classes: int = 2, activation='relu', task: str = 'classification',
                  bs: int = 64, train_size: float = 0.7, optimizer: str = 'sgd', epochs: int = 100,
-                 balance: bool = True):
+                 balance: bool = True,flag_type = "adaptive"):
         """
         Initializes a Model instance.
         :param path: Path to the CSV file
@@ -32,6 +56,7 @@ class AbstractModel:
         if n_classes < 2:
             raise ValueError('n_classes must be at least 2.')
         if optimizer == 'sgd':
+            # self.optimizer = SGD(clipnorm=2.0)
             self.optimizer = SGD()
         else:
             raise NotImplementedError('Only SGD optimizer is implemented!')
@@ -52,11 +77,13 @@ class AbstractModel:
 
         self.lr_history = []
         self.model = None
+        self.lr_time=[]
 
         self.loss = 'categorical_crossentropy'
         self.metrics = ['accuracy']
 
         self.x_train = self.x_test = self.y_train = self.y_test = None
+        self.flag_type=flag_type
 
     def _get_model(self):
         """
@@ -96,6 +123,15 @@ class AbstractModel:
         self.lr_history.append(lr)
         return lr
 
+    def record_output(self,epoch,logs):
+        pass
+    
+    def constant_LR_decay(self,epoch: int,decay_factor: float):
+        """
+        Return the learning rate for decay based scheduler
+        """
+        pass
+
     def fit(self, finish_fit: bool = True):
         """
         Fit to data.
@@ -116,27 +152,83 @@ class AbstractModel:
                 raise ValueError('Data is None')
 
         self.model = self._get_model()
+
         lr_scheduler = LearningRateScheduler(self._lr_schedule)
 
-        # Prepare callbacks for model saving and for learning rate adjustment.
-        save_dir = os.path.join(os.getcwd(), 'saved_models')
-        model_name = 'model.{epoch:03d}.h5'
+        if(self.flag_type == "adaptive"):
+            csv_logger=CSVLogger(filename=base_path+'adaptive/trial_3/training_adaptive.log',append='True')
+            # tensorboard_callback = TensorBoard(log_dir=base_path+'adaptive/trial_1/graphs/',write_grads=True,histogram_freq=1,write_graph=True)
+            save_dir = os.path.join(base_path+"adaptive/trial_3/", 'saved_models')
 
-        # Prepare model model saving directory.
+        else:
+            _,lr=self.flag_type.split(";")
+            csv_logger=CSVLogger(filename=base_path+'constant/'+  'trial_' + lr + '/training_constant.log',append='True')
+            # csv_logger=CSVLogger(filename=base_path+'constant/trial_3/training_constant.log',append='True')
+            # tensorboard_callback = TensorBoard(log_dir=base_path+'constant/'+  'trial_' + lr +'/graphs/')
+            save_dir = os.path.join(base_path+'constant/'+  'trial_' + lr , 'saved_models')
+            # save_dir = os.path.join(base_path+'constant/trial_3/' , 'saved_models')
+
+        # individual_record_callback=LambdaCallback(on_epoch_end=self.record_output)
+        
+
+        # weight_saver_callback = WeightsSaver(1)
+
+        # Prepare callbacks for model saving and for learning rate adjustment.
+        model_name = 'model_best.h5'
+
+        # # Prepare model model saving directory.
         if not os.path.isdir(save_dir):
             os.makedirs(save_dir)
 
         filepath = os.path.join(save_dir, model_name)
         checkpoint = ModelCheckpoint(filepath=filepath,
-                                     monitor='val_acc',
+                                     monitor='loss',
                                      verbose=1,
-                                     save_best_only=True)
+                                     save_best_only=True,save_weights_only=True)
 
+
+
+        print("self.optimizer",self.optimizer,self.loss,self.metrics)
         self.model.compile(self.optimizer, loss=self.loss, metrics=self.metrics)
 
         if finish_fit:
+            time_callback = TimeHistory()
             self.model.fit(self.x_train, self.y_train, validation_data=(self.x_test, self.y_test), epochs=self.epochs,
-                           batch_size=self.bs, shuffle=True, callbacks=[lr_scheduler, checkpoint])
+                           batch_size=self.bs, shuffle=True, callbacks=[csv_logger,time_callback,checkpoint,lr_scheduler])
+            string_to_dump=""
+            # string_to_dump="Epoch,Time taken"+"\n"
+            for i in range(len(time_callback.time_history)):
+                string_to_dump += str(i)+","+str(time_callback.time_history[i] + self.lr_time[i])+"\n"
+                # string_to_dump += str(i)+","+str(time_callback.time_history[i])+"\n"
+
+        # Save model 
+
+        # Save model weights
+        if(self.flag_type == "adaptive"):
+            self.model.save_weights(base_path+"adaptive/trial_3/model_weights.h5")
+
+            # Save model architecture as json
+            model_json = self.model.to_json()
+            with open(base_path+"adaptive/trial_3/model.json","w") as json_file:
+                json_file.write(model_json)
+
+            with open(base_path+"adaptive/trial_3/epoch_times_adaptive.log","a") as fp:
+                fp.write(string_to_dump)
+        else:
+            _,lr=self.flag_type.split(";")
+
+            self.model.save_weights(base_path+"constant/trial_" + lr + "/model_weights_v2.h5")
+            # self.model.save_weights(base_path+"constant/trial_3/model_weights.h5")
+
+            # Save model architecture as json
+            model_json = self.model.to_json()
+            with open(base_path+"constant/trial_"+ lr + "/model.json","w") as json_file:
+            # with open(base_path+"constant/trial_3/model.json","w") as json_file:
+                json_file.write(model_json)
+            
+            with open(base_path+"constant/trial_"+ lr + "/epoch_times.log","a") as fp:
+            # with open(base_path+"constant/trial_3/epoch_times.log","a") as fp:
+                    fp.write(string_to_dump)
 
     def predict(self, x: np.ndarray):
         """
