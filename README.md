@@ -31,7 +31,7 @@ $ source path/to/lipGeneEnv/bin/activate
 $ (lipGeneEnv) pip install -r requirements.txt
 ```
 
-### Setup base_path in GeneExpression directory
+### Setup ```base_path``` in GeneExpression directory
 #### Execution logs and model weights are saved here
 ```
 mkdir test_results
