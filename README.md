@@ -1,4 +1,4 @@
-# SymNet
+# LipGene
 
 SymNet is a deep learning pipeline with a focus on simplicity. Functionality is available through command-line options. The focus is
 on simplicity and getting quick results.
