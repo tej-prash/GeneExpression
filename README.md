@@ -6,7 +6,7 @@ on simplicity and getting quick results.
 # Dataset
 
 
-## Instructions to execute LipGene Model
+## Instructions to deploy the LipGene model
 
 ### Requirements
 * `python` 3.x
