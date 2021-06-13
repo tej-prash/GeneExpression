@@ -32,7 +32,7 @@ $ (lipGeneEnv) pip install -r requirements.txt
 ```
 
 ### Setup ```base_path``` in GeneExpression directory
-#### Execution logs and model weights are saved here
+Execution logs and model weights are saved here
 ```
 mkdir test_results
 cd test_results
@@ -50,11 +50,11 @@ You can use the `symnet.py` file to run regression on gene dataset. The availabl
 
 ### Sample commands
 
-#### Adaptive learning rate
+Adaptive learning rate
 ```
 python3 symnet.py --dataset "/home/gene_dataset/GEO_tr_1/X2_tr.npy,/home/gene_dataset/GEO_tr_1/Y2_tr.npy,/home/gene_dataset/GEO_tr_1/X_va.npy,/home/gene_dataset/GEO_tr_1/Y_va.npy" --batch-size 200 --epochs 1000 --flag-type "adaptive" 
 ```
-#### Constant learning rate
+Constant learning rate
 ```
 python3 symnet.py --dataset "/home/gene_dataset/GEO_tr_1/X2_tr.npy,/home/gene_dataset/GEO_tr_1/Y2_tr.npy,/home/gene_dataset/GEO_tr_1/X_va.npy,/home/gene_dataset/GEO_tr_1/Y_va.npy" --batch-size 200 --epochs 1000 --flag-type "constant;0.1" 
 ```
