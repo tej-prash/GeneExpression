@@ -46,7 +46,7 @@ You can use the `symnet.py` file to run regression on gene dataset. The availabl
 *  `--batch-size`: The batch size to use
 *  `--train-split`: The training data subset split size
 *  `--epochs`: The number of epochs
-*  `--flag-type`: "adaptive" or "constant;0.1"
+*  `--flag-type`: Use "adaptive" or "constant;learning rate value"
 
 ### Sample commands
 
