@@ -1,1 +1,1 @@
-from symnet.regression.model import RegressionModel
+from symnet.regression.model import LipGeneModel
