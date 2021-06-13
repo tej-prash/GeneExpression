@@ -62,7 +62,9 @@ python3 symnet.py --dataset "/home/gene_dataset/GEO_tr_1/X2_tr.npy,/home/gene_da
 ## References
 <a id="1">[1]</a> 
 Y.  Chen,  Y.  Li,  R.  Narayan,  A.  Subramanian,  and  X.  Xie,  “Geneexpression  inference  with  deep  learning,”Bioinformatics,  vol.  32,no. 12, pp. 1832–1839, 2016
+
 <a id="2">[2]</a> 
 G. Consortiumet al., “The genotype-tissue expression (gtex) pilotanalysis: multitissue gene regulation in humans,”Science, vol. 348,no. 6235, pp. 648–660, 2015.
+
 <a id="3">[3]</a> 
 T.  Lappalainen,  M.  Sammeth,  M.  R.  Friedl ̈ander,  P.  AC‘t  Hoen,J.   Monlong,   M.   A.   Rivas,   M.   Gonzalez-Porta,   N.   Kurbatova,T.   Griebel,   P.   G.   Ferreiraet   al.,   “Transcriptome   and   genomesequencing uncovers functional variation in humans,”Nature, vol.501, no. 7468, pp. 506–511, 2013
