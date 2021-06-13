@@ -1,7 +1,6 @@
-# LipGene
+# LipGeneNet
 
-SymNet is a deep learning pipeline with a focus on simplicity. Functionality is available through command-line options. The focus is
-on simplicity and getting quick results.
+LipGeneNet is a deep learning pipeline used for testing the Lipschitz Adaptive Learning Rate (LALR) for the task of Gene Expression Inference.
 
 # Dataset
 Gene Omnibus Expression(GEO) Dataset, based on the Affymetric Microarray platform, is a publicly available dataset prepared by the Broad Institute. It consists of 129 158 gene expression profiles, each profile consisting of 978 landmark genes and 21290 target genes. Chen et al. [1] performed joint quantile normalization and removed duplicates using two other Gene Expression datasets-Genotype-Tissue Expression (GTEx) and 1000 Genomes Expression Data (1000G).  The GTEx and 1000G datasets are based on the Illumina RNA-Seq platform and used Gencode V12 annotations to measure the expression levels of each gene [2], [3]. The modified GEO dataset obtained consists of over 90,000 gene expression profiles, each profile consisting of 943 landmark genes and 9520 target genes, standardized to zero mean and unit standard deviation for each gene. The modified GEO dataset was used for training by Chen et al. [2] and we use the same dataset for our experimentation.
