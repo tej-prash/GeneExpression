@@ -22,7 +22,7 @@ base_path="./test_results/LipGeneModel/"
 
 class LipGeneModel(AbstractModel):
     """
-        LipGeneModel: Uses LipschitzLR policy for regression tasks
+        LipGeneModel: Uses LipschitzLR policy for regression tasks on gene datasets
     """
     def __init__(self, path: str, task: str = 'regression',
                  bs: int = 64, train_size: float = 0.7, optimizer: str = 'sgd', epochs: int = 100, flag_type = "adaptive"):
